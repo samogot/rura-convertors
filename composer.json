@@ -1,0 +1,13 @@
+{
+  "require": {
+    "slim/slim": "^3.0",
+    "catfan/medoo": "^1.0",
+    "grandt/phpepub": "^4.0",
+    "phpoffice/phpword": "^0.12."
+  },
+  "autoload": {
+    "psr-4": {
+      "Ruranobe\\Converters\\": "converters/"
+    }
+  }
+}
