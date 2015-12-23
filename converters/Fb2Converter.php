@@ -19,6 +19,7 @@ class Fb2Converter extends Converter
 
     protected function convertImpl($text)
     {
+
         $descr['book_title'] = $this->nameru;
         foreach ([$this->author, $this->illustrator] as $aut) {
             if ($aut) {
@@ -40,32 +41,11 @@ class Fb2Converter extends Converter
             }
         }
 
-        $descr['annotation'] = "";
-        if ($this->annotation) {
-            $descr['annotation'] = "\n\n" . $this->annotation . "\n\n";
-            $descr['annotation'] = preg_replace('@\'\'\'(.*?)\'\'\'@', "<b>\\1</b>", $descr['annotation']);
-            $descr['annotation'] = preg_replace('@\'\'(.*?)\'\'@', "<i>\\1</i>", $descr['annotation']);
-            $descr['annotation'] = preg_replace('/\n{3,}/', "\n\n<empty-line />\n\n", $descr['annotation']);
-            $descr['annotation'] = preg_replace('/(?<=\n\n)(.*?)(?=\n\n)/s', "<p>\\1</p>", $descr['annotation']);
-            $descr['annotation'] = preg_replace('/\n\n+/', "\n", $descr['annotation']);
-            $descr['annotation'] = preg_replace('@<(/?)b>@', '<\1strong>', $descr['annotation']);
-            $descr['annotation'] = preg_replace('@<(/?)i>@', '<\1emphasis>', $descr['annotation']);
-            $descr['annotation'] = str_replace('<p><empty-line /></p>', '<empty-line />', $descr['annotation']);
-            $descr['annotation'] = trim($descr['annotation']);
-            $descr['annotation'] = "<annotation>$descr[annotation]</annotation>";
-        }
+        $descr['annotation'] = '<annotation>'.$this->annotation.'</annotation>';
 
         $images = [];
         if ($this->cover) {
-            /*if(Title::makeTitle(NS_FILE,$this->cover.'.png')->exists())
-            {*/
-            //$cover = $this->cover . '.png';
             $cover = $this->cover;
-            /*}
-            else
-            {
-                $cover = $this->cover.'.jpg';
-            }*/
             $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $cover) . "\"/></coverpage>";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
@@ -156,93 +136,68 @@ class Fb2Converter extends Converter
 					</section>';
         }
 
-        $text = str_replace(
-            '<span style="position: relative; text-indent: 0;"><span style="display: inline-block; font-style: normal">『　　　』</span><span style="position: absolute; font-size: .7em; top: -11px; left: 50%"><span style="position: relative; left: -50%;">',
-            '[<sup>',
-            $text
-        );
-        $text = str_replace('</span></span></span>', '</sup>]', $text);
-        //$text = preg_replace('@『.*?』.{0,300}<span>([а-яА-Я]+?)</span>@s','[<sup>\\1</sup>]',$text);
-        $text = preg_replace('@<span id="\w+" class="ancor"></span>\n@', '', $text);
-        $text = preg_replace('@</?span.*?>@', '', $text);
-        $text = preg_replace('@</?nowiki>@', '', $text);
-        $text = preg_replace('@\'\'\'(.*?)\'\'\'@', "<b>\\1</b>", $text);
-        $text = preg_replace('@\'\'(.*?)\'\'@', "<i>\\1</i>", $text);
-        $text = preg_replace('@\s*(<center .*?>.*</center>)\s*@', "\n\n\n\n\\1\n\n\n\n", $text);
-        $text = preg_replace('/\s*(==.*==|\[\[File:.*\]\])\s*/', "\n\n\\1\n\n", $text);
-        $text = preg_replace('@(</center>|==|\]\])\n*(<center |==|\[\[File:)@', "\\1\n\n\\2", $text);
-        $text = "\n\n" . trim($text) . "\n\n";
-        $text = preg_replace('/\n{3,}/', "\n\n<empty-line />\n\n", $text);
-        //$text=preg_replace('/(?<=\n\n)(.*?)(?=\n\n)/s',"<p>\\1</p>",$text);
-        $text = preg_replace('/\n\n+/', "\n", $text);
-        $text = preg_replace('@<(/?)b>@', '<\1strong>', $text);
-        $text = preg_replace('@<(/?)i>@', '<\1emphasis>', $text);
-        $text = str_replace('<p><empty-line /></p>', '<empty-line />', $text);
-        $text = preg_replace('@(<p>)?<center .*?>(.*)</center>(</p>)?@', "<subtitle>\\2</subtitle>", $text);
-        $text = preg_replace('@\[(https?://[^ ]*) ([^\]]*)\]@', '<a href="\1">\2</a>', $text);
-        $text = preg_replace('@<p>\s*__TOC__\s*</p>@', '', $text);
+        if($this->height==0) 
+			{
+				$text=preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u','',$text);
 
-        if ($this->height == 0) {
-            $text = preg_replace('/(<p>)?\[\[File:.*\]\](<\/p>)?/u', '', $text);
-        } else {
-            $text = preg_replace_callback(
-                '/(<p>)?\[\[File:(.*?)\|.*\]\](<\/p>)?/u',
-                function ($match) use (&$images) {
-                    $images[] = $match[2];
-                    return "<image l:href=\"#" . str_replace(' ', '_', $match[2]) . "\"/>";
-                },
-                $text
-            );
-        }
+			}
+			else
+                        {
+                            $text=preg_replace_callback(
+							               '/<img[^>]*src="([^"]*)"[^>]*>/u', 
+											function ($match) use(&$images) 
+											{
+											   $images[]=$match[1];
+											   return "<image l:href=\"#".str_replace(' ','_',$match[1])."\"/>";
+											}, 
+											$text);
 
-        $text = preg_replace('/(<p>)?(==+.*==+)(<\/p>)?/', "\\2", $text);
-        preg_match_all('/(^(={2,})[^\n]*\2$)(.{50})/ms', $text, $m);
-        for ($i = 1; $i < count($m[0]); $i++) {
-            $d = strlen($m[2][$i]) - strlen($m[2][$i - 1]);
-            if ($d > 0) {
-                for ($j = 0; $j < $d; $j++) {
-                    $text = str_replace($m[0][$i - 1], $m[1][$i - 1] . "\n<section>" . $m[3][$i - 1], $text);
-                }
-            } elseif ($d < 0) {
-                for ($j = 0; $j < (-$d); $j++) {
-                    $text = str_replace($m[0][$i], "</section>\n" . $m[0][$i], $text);
-                }
-            }
-        }
-        $text = preg_replace('/==+(.*?)==+/', "</section>\n<section>\n<title><p>\\1</p></title>", $text);
-        $text = "<section>\n<empty-line/>\n" . trim($text);
-        for ($i = 0; $i < strlen($m[2][count($m[2]) - 1]) - 1; $i++) {
-            $text .= "\n</section>";
-        }
-        if (count($m[2]) < 1) {
-            $text .= "\n</section>";
-        }
-        $text = preg_replace('@<empty-line />(?!\s*<p>)\n*@', '', $text);
-        $text = preg_replace('@(<title>.*?</title>)\s*(<section>)\s*(<image .*?/>)@', "\\1\n\\3\n\\2", $text);
-        $text = preg_replace('@(?<!</p>\n)<empty-line />\n*@', '', $text);
-        $text = preg_replace('@<section>\s*</section>\n*@', '', $text);
-        $text = preg_replace('@</title>\s*</section>@', "</title>\n<empty-line />\n</section>", $text);
+             }
 
-        $notes = "";
-        if (preg_match_all('@<ref>(.*?)</ref>@s', $text, $m)) {
-            $notes = "<body name=\"notes\">\n\t<title><p>Примечания</p></title>\n";
-            for ($i = 1; $i <= count($m[0]); $i++) {
-                $text = str_replace($m[0][$i - 1], "<a l:href=\"#note$i\" type=\"note\">[$i]</a>", $text);
-                $notes .= "\t<section id=\"note$i\">\n\t\t<title><p>$i</p></title>\n\t\t<p>" . $m[1][$i - 1] . "</p>\n\t</section>\n";
-            }
-            $notes .= '</body>';
-        }
 
-        $binary = "";
-        /*if($images)
+        $j = 0;
+	$notes = '';
+        $isnotes = false;
+        $footnotes = explode(',;,', $this->footnotes);
+        for($i = 0; $i < sizeof($footnotes); $i++)
         {
-            $images = RepoGroup::singleton()->getLocalRepo()->findFiles($images);
-            foreach($images as $imname=>$file) {
-                $image_url=$_SERVER['DOCUMENT_ROOT'].$file->transform(array('width'=>$this->height*2+300,'height'=>$this->height?$this->height:null))->getUrl();
-                $binary.='<binary id="'.str_replace(' ','_',$imname).'" content-type="'.$file->getMimeType().'">'."\n".base64_encode(file_get_contents($image_url))."\n</binary>";
-            }
-        }*/
-        $text = trim($text);
+           if (is_numeric($footnotes[$i]))
+           {
+              $j = 0;
+              if ($isnotes == false)
+              {
+                 $notes .= "<body name=\"notes\">\n\t<title><p>Примечания</p></title>\n";
+              }
+              $isnotes = true;
+              $notes .= "\t<section id=\"cite_note-$footnotes[$i]\">\n\t\t<title><p>$j</p></title>\n\t\t<p>" . $footnotes[$i+1] . "</p>\n\t</section>\n";
+              $i++;
+              $j++;
+           }
+        } 
+        if ($isnotes == true)
+        {
+           $notes .= '</body>';
+        }
+
+			$binary="";
+			if($images)
+			{
+				foreach($images as $index => $image) 
+				{		
+					if (file_get_contents($image,0,null,0,1)) 
+					{					
+
+						$fileContents = file_get_contents($image);
+						$finfo = new \finfo(FILEINFO_MIME);
+						$mimeType = $finfo->buffer($fileContents);
+//$image_url=$_SERVER['DOCUMENT_ROOT'].$file->transform(array('width'=>$this->height*2+300,'height'=>$this->height?$this->height:null))->getUrl();
+						$binary.='<binary id="'.$image.'" content-type="'.$mimeType.'">'."\n".base64_encode($fileContents)."\n</binary>";
+					}
+				}
+			}
+
+//        $text = trim($text);
+
 
         $fb2 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 	<FictionBook xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\" xmlns:l=\"http://www.w3.org/1999/xlink\">
@@ -280,7 +235,6 @@ class Fb2Converter extends Converter
 	$notes
 	$binary
 	</FictionBook>";
-
         // $old=error_reporting( -1 );
         // ob_start();
         // $dom = new DOMDocument();

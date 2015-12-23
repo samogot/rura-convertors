@@ -37,7 +37,7 @@ $app = new \Slim\App(
 
 // Define app routes
 $app->get(
-    '/d/{format}/{title}/{volume}',
+    '/{format}/{title}/{volume}',
     function ($request, $response, $args) {
         /** @var \Slim\Http\Request $request */
         /** @var \Slim\Http\Response $response */
@@ -113,6 +113,36 @@ $app->get(
         sort($translators);
         $workers = array_keys($workers);
         sort($workers);
+        $texts     = $db->select(
+            'texts',
+            [
+                '[>]chapters' => 'text_id',
+                '[>]volumes'  => 'volume_id',
+            ],
+            [
+                'title',
+                'text_html',
+                'footnotes'
+            ],
+            [
+                'volume_id' => $volume['volume_id'],
+            ]
+        );
+
+        $text      = '';
+        $footnotes = '';
+
+        for ($i = 0; $i < sizeof($texts); $i++) 
+        {
+            $text      .= "<h2>".$texts[$i]['title']."</h2>";
+            $text      .= $texts[$i]['text_html'];
+            $footnotes .= $texts[$i]['footnotes'];
+            if ($i < sizeof($texts)-1)
+            {
+                $footnotes .= ',;,';
+            }
+        }
+
         $pdb       = [
             'annotation'   => $volume['annotation'],
             'author'       => $volume['author'],
@@ -129,19 +159,8 @@ $app->get(
             'name_url'     => $project['url'],
             'name_main'    => $volume['name_file'],
             'workers'      => implode(', ', $workers),
+            'footnotes'    => $footnotes,
         ];
-        $texts     = $db->select(
-            'texts',
-            [
-                '[>]chapters' => 'text_id',
-                '[>]volumes'  => 'volume_id',
-            ],
-            'text_html',
-            [
-                'volume_id' => $volume['volume_id'],
-            ]
-        );
-        $text      = implode($texts);
         $converter = null;
         switch ($format) {
             case 'fb2':
@@ -188,7 +207,7 @@ $app->get(
         if ($converter) {
             $converter->convert();
         }
-        return $response->withJson($pdb);
+        //return $response->withJson($pdb);
     }
 );
 

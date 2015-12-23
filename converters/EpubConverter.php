@@ -1,7 +1,8 @@
 <?php
 namespace Ruranobe\Converters;
 
-require_once(__DIR__ . '/../lib/docx/simplehtmldom/simple_html_dom.php');
+//require_once(__DIR__ . '/../lib/epub/EPub.php');
+
 require_once(__DIR__ . '/../lib/docx/htmltodocx_converter/h2d_htmlconverter.php');
 require_once(__DIR__ . '/../lib/docx/example_files/styles.inc');
 require_once(__DIR__ . '/../lib/docx/documentation/support_functions.inc');
@@ -25,7 +26,6 @@ class EpubConverter extends Converter
 
     protected function convertImpl($text)
     {
-
         $descr['book_title'] = $this->nameru;
         foreach ([$this->author, $this->illustrator] as $aut) {
             if ($aut) {
@@ -45,32 +45,18 @@ class EpubConverter extends Converter
             }
         }
 
-        $descr['annotation'] = '';
         if ($this->annotation) {
-            $descr['annotation'] = "\n\n" . $this->annotation . "\n\n";
-            $descr['annotation'] = preg_replace('@\'\'\'(.*?)\'\'\'@', "<b>\\1</b>", $descr['annotation']);
-            $descr['annotation'] = preg_replace('@\'\'(.*?)\'\'@', "<i>\\1</i>", $descr['annotation']);
-            $descr['annotation'] = preg_replace('/\n{3,}/', "\n\n\n\n", $descr['annotation']);
-            $descr['annotation'] = preg_replace('/(?<=\n\n)(.*?)(?=\n\n)/s', "<p>\\1</p>", $descr['annotation']);
-            $descr['annotation'] = preg_replace('/\n\n+/', "\n", $descr['annotation']);
-            $descr['annotation'] = str_replace('<p><empty-line /></p>', '\n', $descr['annotation']);
+            $descr['annotation'] = $this->annotation;
             $descr['annotation'] = trim($descr['annotation']);
             $descr['annotation'] = "<h2>Аннотация</h2>$descr[annotation]";
+        } else {
+            $descr['annotation'] = '';
         }
 
         $images = [];
         if ($this->cover) {
-            if (Title::makeTitle(NS_FILE, $this->cover . '.png')->exists()) {
-                $cover = $this->cover . '.png';
-            } else {
-                $cover = $this->cover . '.jpg';
-            }
-
-            $descr['coverpage']   = "<div class=\"center\"><img src=\"images/" . str_replace(
-                    ' ',
-                    '_',
-                    $cover
-                ) . "\" alt=\"" . str_replace(' ', '_', $cover) . "\"/></div>";
+            $cover = $this->cover;
+            $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $cover) . "\"/></coverpage>";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
         }
@@ -86,7 +72,7 @@ class EpubConverter extends Converter
         }
 
         $descr['date2']   = date('j F Y, H:i', strtotime($this->touched));
-        $descr['version'] = $this->revcount;
+        //$descr['version'] = $this->revcount;
         //$descr['src_url'] = Title::makeTitle(NS_MAIN, $this->nameurl)->getFullUrl('', false, PROTO_HTTP);
         $descr['id']      = 'RuRa_' . str_replace('/', '_', $this->nameurl);
 
@@ -151,149 +137,51 @@ class EpubConverter extends Converter
 
         $credit = $credit;
 
-        $text = str_replace(
-            '<span style="position: relative; text-indent: 0;"><span style="display: inline-block; font-style: normal">『　　　』</span><span style="position: absolute; font-size: .7em; top: -11px; left: 50%"><span style="position: relative; left: -50%;">',
-            '[<sup>',
-            $text
-        );
-        $text = str_replace('</span></span></span>', '</sup>]', $text);
-        //$text = preg_replace('@『.*?』.{0,300}<span>([а-яА-Я]+?)</span>@s','『<sup>\1</sup>』',$text);
-        $text = preg_replace('@<span id="\w+" class="ancor"></span>\n@', '', $text);
-        $text = preg_replace('@</?span.*?>@', '', $text);
-        $text = preg_replace('@</?nowiki>@', '', $text);
-        $text = $this->wgParser->doDoubleUnderscore($text);
-        $text = $this->wgParser->doHeadings($text);
-        $text = preg_replace('@\'\'\'(.*?)\'\'\'@', "<b>\\1</b>", $text);
-        $text = preg_replace('@\'\'(.*?)\'\'@', "<i>\\1</i>", $text);
-        $text = $this->wgParser->replaceExternalLinks($text);
-        //$text=preg_replace('@\s*()\s*@',"\n\n\\1\n\n",$text);
-        $text = preg_replace(
-            '@\s*(<h\d>.*</h\d>|\[\[File:.*\]\]|<center .*?(?:)>.*</center>)\s*@',
-            "\n\n\\1\n\n",
-            $text
-        );
-        $text = preg_replace('@(</center>|</h\d>|\]\])\n*(<center |<h\d>|\[\[File:)@', "\\1\n\n\\2", $text);
-        $text = "\n\n" . trim($text) . "\n\n";
-        $text = preg_replace('/\n{3,}/', "\n\n<empty-line />\n\n", $text);
-        $text = preg_replace('/(?<=\n\n)(.*?)(?=\n\n)/s', "<p>\\1</p>", $text);
-        $text = preg_replace('/\n\n+/', "\n", $text);
-        //$text=preg_replace('@<(/?)b>@','<\b>',$text);
-        //$text=preg_replace('@<(/?)i>@','<\i>',$text);
-        $text = str_replace('<p><empty-line /></p>', '<br />', $text);
-        $text = str_replace("<p><!--MWTOC--></p>\n?", '', $text);
-        $text = preg_replace('@<p>(<h\d>.*?</h\d>)</p>@', '\1', $text);
-        $text = preg_replace('@<p><center .*?(?:)>(.*?)</center></p>@', '<p class="center">\1</p>', $text);
-        //$text=preg_replace('@(<p>)?<center .*?(?:)>(.*)</center>(</p>)?@',"<h2>\\2</h2>",$text);
-        //$text=preg_replace('@\[(https?://[^ ]*) ([^\]]*)\]@','<a href="\1">\2</a>',$text);
+        
+        if($this->height==0) 
+			{
+				$text=preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u','',$text);
 
-        if ($this->height == 0) {
-            $text = preg_replace('/(<p>)?\[\[File:.*\]\](<\/p>)?/u', '', $text);
-        } else {
-            $text = preg_replace_callback(
-                '/(<p>)?\[\[File:(.*?)\|.*\]\](<\/p>)?/u',
-                function ($match) use (&$images) {
-                    $images[] = $match[2];
-                    /* Width and height are unimportant. Actual resizing is done not in this class. We must save aspect ratio though. */
-                    return "<div class=\"center\"><img src=\"images/" . str_replace(
-                        ' ',
-                        '_',
-                        $match[2]
-                    ) . "\" alt=\"" . str_replace(' ', '_', $match[2]) . "\"/></div>";
-                },
-                $text
-            );
-        }
+			}
+			else
+                        {
+                            $text=preg_replace_callback(
+							               '/<img[^>]*src="([^"]*)"[^>]*>/u', 
+											function ($match) use(&$images) 
+											{
+											   $images[]=$match[1];
+											   return "<image l:href=\"#".str_replace(' ','_',$match[1])."\"/>";
+											}, 
+											$text);
 
-        // $text=preg_replace('/(<p>)?(==+.*==+)(<\/p>)?/',"\\2",$text);
-        // preg_match_all('/(^(={2,})[^\n]*\2$)(.{50})/ms',$text,$m);
-        // for($i=1;$i<count($m[0]);$i++)
-        // {
-        // $d=strlen($m[2][$i])-strlen($m[2][$i-1]);
-        // if($d>0)
-        // {
-        // for($j=0;$j<$d;$j++)
-        // {
-        // $text=str_replace($m[0][$i-1],$m[1][$i-1]."\n<section>".$m[3][$i-1],$text);
-        // }
-        // }
-        // elseif($d<0)
-        // {
-        // for($j=0;$j<(-$d);$j++)
-        // {
-        // $text=str_replace($m[0][$i],"</section>\n".$m[0][$i],$text);
-        // }
-        // }
-        // }
-        // $text=preg_replace('/==+(.*?)==+/',"</section>\n<section>\n<h1>\\1</h1>",$text);
-        // $text="<section>\n<br/>\n".trim($text);
-        // for($i=0;$i<strlen($m[2][count($m[2])-1])-1;$i++)
-        // $text.="\n</section>";
-        // if(count($m[2])<1)	$text.="\n</section>";
-        $text = preg_replace('@<br />(?!\s*<p>)\n*@', '', $text);
-        //$text=preg_replace('@(<h1>.*?</h1>)\s*(<section>)\s*(<img .*?/>)@',"\\1\n\\3\n\\2",$text);
-        $text = preg_replace('@(?<!</p>\n)<br />\n*@', '', $text);
-        //$text=preg_replace('@<section>\s*</section>\n*@','',$text);
-        //$text=preg_replace('@</h1>\s*</section>@',"</h1>\n<br/>\n</section>",$text);
-        //echo '<xmp>'.$text;exit;
+             }
 
-        if (preg_match_all('@<ref>(.*?)</ref>@s', $text, $m)) {
-            $notes = "<h2>Примечания</h2>\n\t\n";
-            for ($i = 1; $i <= count($m[0]); $i++) {
-                /*
-                Footnotes are temporary unavailable. Docx is a pain in an ass.*/
-
-                $text = str_replace(
-                    $m[0][$i - 1],
-                    "<a epub:type=\"noteref\"  href=\"notes.xhtml#note$i\" class=\"reference\" id=\"ref$i\">[$i]</a>",
-                    $text
-                );
-                $notes .= "\t<div class=\"notes\"><aside epub:type=\"rearnote\" class=\"note\" id=\"note$i\">$i. " . $m[1][$i - 1] . "</aside></div>\n";
-
-            }
-            //$notes.='</div>';
+        $j = 0;
+	$notes = '';
+        $isnotes = false;
+        $footnotes = explode(',;,', $this->footnotes);
+        for($i = 0; $i < sizeof($footnotes); $i++)
+        {
+           if (is_numeric($footnotes[$i]))
+           {
+              $j = 0;
+              if ($isnotes == false)
+              {
+                 $notes .= "<body name=\"notes\">\n\t<title><p>Примечания</p></title>\n";
+              }
+              $isnotes = true;
+              $notes .= "\t<section id=\"cite_note-$footnotes[$i]\">\n\t\t<title><p>$j</p></title>\n\t\t<p>" . $footnotes[$i+1] . "</p>\n\t</section>\n";
+              $i++;
+              $j++;
+           }
+        } 
+        if ($isnotes == true)
+        {
+           $notes .= '</body>';
         }
 
         $text     = trim($text);
         $epubText = "$descr[annotation]$credit$text$notes";
-
-        $epubText = preg_replace('@section@', "div", $epubText);
-
-        /* Delete __TOC__ text */
-        //$epubText=preg_replace('@<p>\s*__TOC__\s*</p>@','',$epubText);
-
-        /* Delete extra <br/> tag before images */
-        $epubText = preg_replace('@<div>(.){0,20}<br/>(.){0,20}<img src@s', '<div><img src', $epubText);
-
-        /* Added page breaks before all <h2> */
-        //$epubText=str_replace('<h2>', '<pb/><h2>', $epubText);
-
-        /* Swap h2 and img tags if img follows h2. (It gave a bad look in docx). Also deletes <pb/> tag which is
-           redunt after swap. */
-        $epubText = preg_replace('@<pb/>(<h2>.{0,100}</h2>).{0,20}(<img .{0,200}/>)@s', '\\2\\1', $epubText);
-        $epubText = preg_replace('@(<h2>.{0,100}</h2>).{0,20}(<img .{0,200}/>)@s', '\\2\\1', $epubText);
-
-        /* Delete extra <pb/> tag in case immediately before <pb/> there is an image */
-        $epubText = preg_replace('@(<img.*?/>)(.{0,20})<pb/><h2>@s', '\\1\\2<h2>', $epubText);
-
-        /* After swap we often needs to further lift img tag in previous <div> tag */
-        $epubText = preg_replace(
-            '@</div>.{0,20}<div>.{0,20}(<img.{0,200}/>).{0,20}<h2@s',
-            '\\1</div><div><h2',
-            $epubText
-        );
-
-        /* After swap we often needs to further lift img tag in previous <div> tag */
-        $epubText = preg_replace(
-            '@</div>.{0,20}<div>.{0,20}(<img.{0,200}/>).{0,20}<h2@s',
-            '\\1</div><div><h2',
-            $epubText
-        );
-
-        /* Eliminate caret return before <h1> (Each div starts with caret return in h2d_htmlconverter.php) */
-        $epubText = preg_replace('@\s*<div>(.{0,40})(<h1>.*?</h1>)@s', '\\1\\2<div>', $epubText);
-
-        /* Suddenly realized, that without page breaks it is better). Just delete the next line to add page breaks. */
-        $epubText = preg_replace('@pb@', "br", $epubText);
 
         /*
            ---------------------------------------------------------------------------------------------------
@@ -304,7 +192,8 @@ class EpubConverter extends Converter
         /* Eliminate warning "element "br" not allowed here;..." */
         $epubText = preg_replace('@(<br.*?/>)@', "<p>\\1</p>", $epubText);
 
-        $epub = new EPub();
+        $epub = new \PHPePub\Core\EPub();
+
         $epub->setLanguage("ru");
 
         $epub->addCSSFile("epub_styles.css", "styles", file_get_contents(__DIR__ . "/epub_styles.css"));
@@ -345,7 +234,6 @@ class EpubConverter extends Converter
                 }
             }
         }
-
         /* Doublirovanie koda. Should be rewritten somehow in future. */
 
         $tableOfContents = $this->createTableOfContentsText($tableOfContentsLinks, $tableOfContentsChapterNames);
@@ -379,8 +267,7 @@ class EpubConverter extends Converter
         //
 
         $i      = 0;
-        $images = RepoGroup::singleton()->getLocalRepo()->findFiles($images);
-        foreach ($images as $imagename => $imagefile) {
+/*        foreach ($images as $imagename => $imagefile) {
             $aspectratio = ((int)$imagefile->width) / ((int)$imagefile->height);
             if ($this->height > 0) {
                 if ($aspectratio > 1.0) {
@@ -407,7 +294,7 @@ class EpubConverter extends Converter
                     mime_content_type($imageurl)
                 );
             }
-        }
+        }*/
 
         if ($this->isbn) {
             $epub->setIdentifier($this->isbn, 'ISBN');

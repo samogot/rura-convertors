@@ -29,6 +29,7 @@ abstract class Converter
     protected $nameurl;
     protected $namemain;
     protected $height;
+    protected $footnotes;
 
     public function __construct($height, $pdb, $text, $config)
     {
@@ -168,5 +169,6 @@ abstract class Converter
         $this->nameurl     = $pdb['name_url'];
         $this->namemain    = $pdb['name_main'];
         $this->workers     = $pdb['workers'];
+        $this->footnotes   = $pdb['footnotes'];
     }
 }
