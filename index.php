@@ -92,28 +92,27 @@ $app->get(
                 '[>]team_members(tmm)'     => 'member_id',
                 '[>]teams(tm)'             => ['tmm.team_id' => 'team_id'],
             ],
-            ['release_activity_id', 'activity_id', 'activity_name', 'team_name', 'nikname', 'team_hidden'],
+            ['release_activity_id', 'activity_id', 'activity_name', 'team_name', 'nikname(nickname)', 'team_hidden'],
             ['volume_id' => $volume['volume_id']]
         );
         $teams       = [];
         $translators = [];
         $workers     = [];
         foreach ($activities as $activity) {
+            $is_translator = in_array($activity['activity_id'], [1, 2, 10, 11, 13]);
             if (!$activity['team_hidden']) {
-                $teams[$activity['team_name']] = null;
+                $teams[$activity['team_name']] -= $is_translator;
             }
-            if (in_array($activity['activity_id'], [1, 2, 10, 11, 13])) {
-                $translators[$activity['nikname']] = null;
-            } else {
-                $workers[$activity['nikname']] = null;
+            if ($is_translator) {
+                $translators[$activity['nickname']] = null;
             }
+            $workers[$activity['activity_name']][] = $activity['nickname'];
         }
-        $teams       = array_keys($teams);
+        asort($teams);
+        $teams = array_keys($teams);
         $translators = array_keys($translators);
         sort($translators);
-        $workers = array_keys($workers);
-        sort($workers);
-        $texts     = $db->select(
+        $texts = $db->select(
             'texts',
             [
                 '[>]chapters' => 'text_id',
@@ -132,13 +131,11 @@ $app->get(
         $text      = '';
         $footnotes = '';
 
-        for ($i = 0; $i < sizeof($texts); $i++) 
-        {
-            $text      .= "<h2>".$texts[$i]['title']."</h2>";
-            $text      .= $texts[$i]['text_html'];
+        for ($i = 0; $i < sizeof($texts); $i++) {
+            $text .= "<h2>" . $texts[$i]['title'] . "</h2>";
+            $text .= $texts[$i]['text_html'];
             $footnotes .= $texts[$i]['footnotes'];
-            if ($i < sizeof($texts)-1)
-            {
+            if ($i < sizeof($texts) - 1) {
                 $footnotes .= ',;,';
             }
         }
@@ -149,16 +146,16 @@ $app->get(
             'name_ru'      => $volume['name_ru'],
             'illustrator'  => $volume['illustrator'],
             'cover'        => $cover,
-            'translators'  => implode(', ', $translators),
+            'translators'  => $translators,
             'series_title' => $project['title'],
             'series_num'   => $volume['sequence_number'],
             'revcount'     => 0, // watafak?
             'isbn'         => $volume['ISBN'],
-            'command'      => reset($teams),
+            'command'      => implode(' совместно с ', $teams),
             'touched'      => $touched,
             'name_url'     => $project['url'],
             'name_main'    => $volume['name_file'],
-            'workers'      => implode(', ', $workers),
+            'workers'      => $workers,
             'footnotes'    => $footnotes,
         ];
         $converter = null;
@@ -204,9 +201,7 @@ $app->get(
 //        file_get_contents($ga . "&t=pageview&dh=ruranobe.ru&dp=" . urlencode("/d/$format/$page"));
 //        file_get_contents($ga . "&t=event&ec=download&ea=$format&el=" . urlencode($page));
 
-        if ($converter) {
-            $converter->convert();
-        }
+        return $converter->convert($response);
         //return $response->withJson($pdb);
     }
 );

@@ -6,9 +6,6 @@ require_once(__DIR__ . '/../lib/docx/htmltodocx_converter/h2d_htmlconverter.php'
 require_once(__DIR__ . '/../lib/docx/example_files/styles.inc');
 require_once(__DIR__ . '/../lib/docx/documentation/support_functions.inc');
 
-$wgShowSQLErrors        = 1;
-$wgShowExceptionDetails = true;
-$wgDevelopmentWarnings  = true;
 error_reporting(-1);
 ini_set('display_errors', 1);
 
@@ -51,8 +48,6 @@ class DocxConverter extends Converter
             }
         }
 
-        
-
         if ($this->annotation) {
             $descr['annotation'] = $this->annotation;
             $descr['annotation'] = trim($descr['annotation']);
@@ -63,15 +58,15 @@ class DocxConverter extends Converter
 
         $images = [];
         if ($this->cover) {
-            $cover = $this->cover;
+            $cover                = $this->cover;
             $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $cover) . "\"/></coverpage>";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
         }
 
         if ($this->translators) {
-            foreach (explode(',', $this->translators) as $tr) {
-                $descr['translator'] .= "<p name=\"translator\">$tr</p>";
+            foreach ($this->translators as $translator) {
+                $descr['translator'] .= "<p name=\"translator\">$translator</p>";
             }
         }
 
@@ -79,10 +74,10 @@ class DocxConverter extends Converter
             $descr['sequence'] = "<h1>{$this->seriestitle}" . ($this->seriesnum ? " {$this->seriesnum}" : '') . " </h1>";
         }
 
-        $descr['date2']   = date('j F Y, H:i', strtotime($this->touched));
+        $descr['date2'] = date('j F Y, H:i', strtotime($this->touched));
 //        $descr['version'] = $this->revcount;
         //$descr['src_url'] = Title::makeTitle(NS_MAIN, $this->nameurl)->getFullUrl('', false, PROTO_HTTP);
-        $descr['id']      = 'RuRa_' . str_replace('/', '_', $this->nameurl);
+        $descr['id'] = 'RuRa_' . str_replace('/', '_', $this->nameurl);
 
         if ($this->isbn) {
             $descr['isbn'] = ";isbn:{$this->isbn}";
@@ -91,9 +86,8 @@ class DocxConverter extends Converter
         if ($this->command == 'RuRa-team') {
             $credit = "<h2>Реквизиты переводчиков</h2>
  				         <p>Над переводом работала команда <b>RuRa-team</b></p>\n";
-            foreach (explode('|-', trim($this->workers)) as $wk) {
-                $wk = explode('|', trim($wk));
-                $credit .= "<p>$wk[1]: <b>$wk[3]</b></p>\n";
+            foreach ($this->workers as $activity => $workers) {
+                $credit .= '<p>' . $activity . ': <b>' . implode('</b>, <b>', $workers) . "</b></p>\n";
             }
             $credit .= '<p>Самый свежий перевод всегда можно найти на сайте нашего проекта:</p>
 				          <p><a href="http://ruranobe.ru">http://ruranobe.ru</a></p>
@@ -120,9 +114,8 @@ class DocxConverter extends Converter
         } elseif (strpos($this->command, 'RuRa-team') !== false) {
             $credit = "<h2>Реквизиты переводчиков</h2>
 						 <p>Над релизом работали {$this->command}</p>\n";
-            foreach (explode('|-', trim($this->workers)) as $wk) {
-                $wk = explode('|', trim($wk));
-                $credit .= "<p>$wk[1]: <b>$wk[3]</b></p>\n";
+            foreach ($this->workers as $activity => $workers) {
+                $credit .= '<p>' . $activity . ': <b>' . implode('</b>, <b>', $workers) . "</b></p>\n";
             }
             $credit .= '<p>Самый свежий перевод всегда можно найти на сайте нашего проекта:</p>
 						  <p><a l:href="http://ruranobe.ru">http://ruranobe.ru</a></p>
@@ -135,69 +128,56 @@ class DocxConverter extends Converter
             if ($this->command) {
                 $credit .= "<p>Перевод команды {$this->command}</p>";
             }
-            foreach (explode('|-', trim($this->workers)) as $wk) {
-                $wk = explode('|', trim($wk));
-                $credit .= "<p>$wk[1]: <b>$wk[3]</b></p>";
+            foreach ($this->workers as $activity => $workers) {
+                $credit .= '<p>' . $activity . ': <b>' . implode('</b>, <b>', $workers) . "</b></p>\n";
             }
             $credit .= '<p>Версия от ' . date('d.m.Y', strtotime($this->touched)) . '</p>
 						  <p><b>Любое коммерческое использование данного текста или его фрагментов запрещено</b></p>';
         }
 
+        if ($this->height == 0) {
+            $text = preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u', '', $text);
 
-        $credit = $credit;
+        } else {
+            $innerHeight = $this->height;
+            $text        = preg_replace_callback(
+                '/<img[^>]*src="([^"]*)"[^>]*>/u',
+                function ($match) use (&$images) {
 
- if($this->height==0) 
-			{
-				$text=preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u','',$text);
-
-			}
-			else
-                        {
-$innerHeight = $this->height;
-                            $text=preg_replace_callback(
-							               '/<img[^>]*src="([^"]*)"[^>]*>/u', 
-											function ($match) use(&$images) 
-											{
-			
                     $image = $match[1];
-                    
-                    if (file_get_contents($image,0,null,0,1)) 
-		    {
-$img = file_get_contents($image);
-$temp = tmpfile();
-file_put_contents($temp, $img);
 
-$width = imagesx($im);
-$height = imagesy($im);
-$innerAspectRatio = $width / $height;
-$innerImageUrl    = null;
-                    if ($innerHeight > 0) {
-                        if ($innerAspectRatio > 1.0) {
-                            $innerResizedWidth  = $innerHeight;
-                            $innerResizedHeight = $innerHeight / $innerAspectRatio;
-                        } else {
-                            $innerResizedHeight = $innerHeight;
-                            $innerResizedWidth  = $innerHeight * $innerAspectRatio;
+                    if (file_get_contents($image, 0, null, 0, 1)) {
+                        $img  = file_get_contents($image);
+                        $temp = tmpfile();
+                        file_put_contents($temp, $img);
+
+                        $width            = imagesx($im);
+                        $height           = imagesy($im);
+                        $innerAspectRatio = $width / $height;
+                        $innerImageUrl    = null;
+                        if ($innerHeight > 0) {
+                            if ($innerAspectRatio > 1.0) {
+                                $innerResizedWidth  = $innerHeight;
+                                $innerResizedHeight = $innerHeight / $innerAspectRatio;
+                            } else {
+                                $innerResizedHeight = $innerHeight;
+                                $innerResizedWidth  = $innerHeight * $innerAspectRatio;
+                            }
                         }
-                    }
-if (!$innerAspectRatio) {
-                        return "";
-                    }
+                        if (!$innerAspectRatio) {
+                            return "";
+                        }
 
-$innerImageUrl = $_SERVER['DOCUMENT_ROOT'] . $temp->transform(
-                            [
-                                'width'  => $innerResizedWidth,
-                                'height' => $innerResizedHeight,
-                            ]
-                        )->getUrl();
-
+                        $innerImageUrl = $_SERVER['DOCUMENT_ROOT'] . $temp->transform(
+                                [
+                                    'width'  => $innerResizedWidth,
+                                    'height' => $innerResizedHeight,
+                                ]
+                            )->getUrl();
 
                     }
 
-
-
-                    
-                    $innerImageUrl    = null;
+                    $innerImageUrl = null;
                     if ($innerHeight > 0) {
                         if ($innerAspectRatio > 1.0) {
                             $innerResizedWidth  = $innerHeight;
@@ -220,33 +200,30 @@ $innerImageUrl = $_SERVER['DOCUMENT_ROOT'] . $temp->transform(
                         )->getUrl();
                     /* Width and height are unimportant. Actual resizing is done not in this class. We must save aspect ratio though. */
                     return "<img src=\"" . $innerImageUrl . "\" width=\"" . $innerImageFile->width . "\" height=\"" . $innerImageFile->height . "\" />";
-											}, 
-											$text);
+                },
+                $text
+            );
 
-             }
+        }
 
-        $j = 0;
-	    $notes = '';
-        $isnotes = false;
+        $j         = 0;
+        $notes     = '';
+        $isnotes   = false;
         $footnotes = explode(',;,', $this->footnotes);
-        for($i = 0; $i < sizeof($footnotes); $i++)
-        {
-           if (is_numeric($footnotes[$i]))
-           {
-              $j = 0;
-              if ($isnotes == false)
-              {
-                 $notes .= "<body name=\"notes\">\n\t<title><p>Примечания</p></title>\n";
-              }
-              $isnotes = true;
-              $notes .= "\t<section id=\"cite_note-$footnotes[$i]\">\n\t\t<title><p>$j</p></title>\n\t\t<p>" . $footnotes[$i+1] . "</p>\n\t</section>\n";
-              $i++;
-              $j++;
-           }
-        } 
-        if ($isnotes == true)
-        {
-           $notes .= '</body>';
+        for ($i = 0; $i < sizeof($footnotes); $i++) {
+            if (is_numeric($footnotes[$i])) {
+                $j = 0;
+                if ($isnotes == false) {
+                    $notes .= "<body name=\"notes\">\n\t<title><p>Примечания</p></title>\n";
+                }
+                $isnotes = true;
+                $notes .= "\t<section id=\"cite_note-$footnotes[$i]\">\n\t\t<title><p>$j</p></title>\n\t\t<p>" . $footnotes[$i + 1] . "</p>\n\t</section>\n";
+                $i++;
+                $j++;
+            }
+        }
+        if ($isnotes == true) {
+            $notes .= '</body>';
         }
 
         $text     = trim($text);
@@ -262,7 +239,7 @@ $innerImageUrl = $_SERVER['DOCUMENT_ROOT'] . $temp->transform(
 	</html>";
 
         $epubText = preg_replace('@section@', "div", $epubText);
-        
+
         /* Delete extra <br/> tag before images */
         $epubText = preg_replace('@<div>(.){0,20}<br/>(.){0,20}<img src@s', '<div><img src', $epubText);
 
@@ -274,7 +251,6 @@ $innerImageUrl = $_SERVER['DOCUMENT_ROOT'] . $temp->transform(
         /* Delete extra <pb/> tag in case immediately before <pb/> there is an image */
 
         $epubText = preg_replace('@(<img.*?/>)(.{0,20})<pb/><h2>@', '\\1\\2<h2>', $epubText);
-
 
         /* After swap we often needs to further lift img tag in previous <div> tag */
         $epubText = preg_replace(

@@ -41,11 +41,11 @@ class Fb2Converter extends Converter
             }
         }
 
-        $descr['annotation'] = '<annotation>'.$this->annotation.'</annotation>';
+        $descr['annotation'] = '<annotation>' . $this->annotation . '</annotation>';
 
         $images = [];
         if ($this->cover) {
-            $cover = $this->cover;
+            $cover                = $this->cover;
             $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $cover) . "\"/></coverpage>";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
@@ -53,8 +53,8 @@ class Fb2Converter extends Converter
 
         $descr['translator'] = "";
         if ($this->translators) {
-            foreach (explode(',', $this->translators) as $tr) {
-                $descr['translator'] .= "<translator><nickname>$tr</nickname></translator>";
+            foreach ($this->translators as $translator) {
+                $descr['translator'] .= "<translator><nickname>$translator</nickname></translator>";
             }
         }
 
@@ -75,9 +75,8 @@ class Fb2Converter extends Converter
             $credit = "<section>
 					<title><p>Реквизиты переводчиков</p></title>
 					<p>Над переводом работала команда <strong>RuRa-team</strong></p>\n";
-            foreach (explode('|-', trim($this->workers)) as $wk) {
-                $wk = explode('|', trim($wk));
-                $credit .= "<p>$wk[1]: <strong>$wk[3]</strong></p>\n";
+            foreach ($this->workers as $activity => $workers) {
+                $credit .= '<p>' . $activity . ': <strong>' . implode('</strong>, <strong>', $workers) . "</strong></p>\n";
             }
             $credit .= '<p>Самый свежий перевод всегда можно найти на сайте нашего проекта:</p>
 					<p><a l:href="http://ruranobe.ru">http://ruranobe.ru</a></p>
@@ -108,9 +107,8 @@ class Fb2Converter extends Converter
             $credit = "<section>
 					<title><p>Реквизиты переводчиков</p></title>
 					<p>Над релизом работали {$this->command}</p>\n";
-            foreach (explode('|-', trim($this->workers)) as $wk) {
-                $wk = explode('|', trim($wk));
-                $credit .= "<p>$wk[1]: <strong>$wk[3]</strong></p>\n";
+            foreach ($this->workers as $activity => $workers) {
+                $credit .= '<p>' . $activity . ': <strong>' . implode('</strong>, <strong>', $workers) . "</strong></p>\n";
             }
             $credit .= '<p>Самый свежий перевод всегда можно найти на сайте нашего проекта:</p>
 					<p><a l:href="http://ruranobe.ru">http://ruranobe.ru</a></p>
@@ -126,9 +124,8 @@ class Fb2Converter extends Converter
             if ($this->command) {
                 $credit .= "<p>Перевод команды {$this->command}</p>\n";
             }
-            foreach (explode('|-', trim($this->workers)) as $wk) {
-                $wk = explode('|', trim($wk));
-                $credit .= "<p>$wk[1]: <strong>$wk[3]</strong></p>\n";
+            foreach ($this->workers as $activity => $workers) {
+                $credit .= '<p>' . $activity . ': <strong>' . implode('</strong>, <strong>', $workers) . "</strong></p>\n";
             }
             $credit .= '<p>Версия от ' . date('d.m.Y', strtotime($this->touched)) . '</p>
 					<empty-line/>
@@ -136,68 +133,58 @@ class Fb2Converter extends Converter
 					</section>';
         }
 
-        if($this->height==0) 
-			{
-				$text=preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u','',$text);
+        if ($this->height == 0) {
+            $text = preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u', '', $text);
 
-			}
-			else
-                        {
-                            $text=preg_replace_callback(
-							               '/<img[^>]*src="([^"]*)"[^>]*>/u', 
-											function ($match) use(&$images) 
-											{
-											   $images[]=$match[1];
-											   return "<image l:href=\"#".str_replace(' ','_',$match[1])."\"/>";
-											}, 
-											$text);
+        } else {
+            $text = preg_replace_callback(
+                '/<img[^>]*src="([^"]*)"[^>]*>/u',
+                function ($match) use (&$images) {
+                    $images[] = $match[1];
+                    return "<image l:href=\"#" . str_replace(' ', '_', $match[1]) . "\"/>";
+                },
+                $text
+            );
 
-             }
-
-
-        $j = 0;
-	$notes = '';
-        $isnotes = false;
-        $footnotes = explode(',;,', $this->footnotes);
-        for($i = 0; $i < sizeof($footnotes); $i++)
-        {
-           if (is_numeric($footnotes[$i]))
-           {
-              $j = 0;
-              if ($isnotes == false)
-              {
-                 $notes .= "<body name=\"notes\">\n\t<title><p>Примечания</p></title>\n";
-              }
-              $isnotes = true;
-              $notes .= "\t<section id=\"cite_note-$footnotes[$i]\">\n\t\t<title><p>$j</p></title>\n\t\t<p>" . $footnotes[$i+1] . "</p>\n\t</section>\n";
-              $i++;
-              $j++;
-           }
-        } 
-        if ($isnotes == true)
-        {
-           $notes .= '</body>';
         }
 
-			$binary="";
-			if($images)
-			{
-				foreach($images as $index => $image) 
-				{		
-					if (file_get_contents($image,0,null,0,1)) 
-					{					
+        $j         = 0;
+        $notes     = '';
+        $isnotes   = false;
+        $footnotes = explode(',;,', $this->footnotes);
+        for ($i = 0; $i < sizeof($footnotes); $i++) {
+            if (is_numeric($footnotes[$i])) {
+                $j = 0;
+                if ($isnotes == false) {
+                    $notes .= "<body name=\"notes\">\n\t<title><p>Примечания</p></title>\n";
+                }
+                $isnotes = true;
+                $notes .= "\t<section id=\"cite_note-$footnotes[$i]\">\n\t\t<title><p>$j</p></title>\n\t\t<p>" . $footnotes[$i + 1] . "</p>\n\t</section>\n";
+                $i++;
+                $j++;
+            }
+        }
+        if ($isnotes == true) {
+            $notes .= '</body>';
+        }
 
-						$fileContents = file_get_contents($image);
-						$finfo = new \finfo(FILEINFO_MIME);
-						$mimeType = $finfo->buffer($fileContents);
+        $binary = "";
+        if ($images) {
+            foreach ($images as $index => $image) {
+                if (file_get_contents($image, 0, null, 0, 1)) {
+
+                    $fileContents = file_get_contents($image);
+                    $finfo        = new \finfo(FILEINFO_MIME);
+                    $mimeType     = $finfo->buffer($fileContents);
 //$image_url=$_SERVER['DOCUMENT_ROOT'].$file->transform(array('width'=>$this->height*2+300,'height'=>$this->height?$this->height:null))->getUrl();
-						$binary.='<binary id="'.$image.'" content-type="'.$mimeType.'">'."\n".base64_encode($fileContents)."\n</binary>";
-					}
-				}
-			}
+                    $binary .= '<binary id="' . $image . '" content-type="' . $mimeType . '">' . "\n" . base64_encode(
+                            $fileContents
+                        ) . "\n</binary>";
+                }
+            }
+        }
 
 //        $text = trim($text);
-
 
         $fb2 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 	<FictionBook xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\" xmlns:l=\"http://www.w3.org/1999/xlink\">

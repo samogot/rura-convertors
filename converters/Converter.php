@@ -20,7 +20,7 @@ abstract class Converter
     protected $cover;
     protected $translators;
     protected $seriestitle;
-    protected $seriestnum;
+    protected $seriesnum;
     protected $revcount;
     protected $isbn;
     protected $command;
@@ -36,7 +36,7 @@ abstract class Converter
         $this->height = $height;
         $this->parseMainReleasesRow($pdb);
         $this->text_to_convert = $text;
-        $this->config = $config;
+        $this->config          = $config;
     }
 
     private function apiСall($function, $params, $opts_var = null)
@@ -61,15 +61,12 @@ abstract class Converter
         return $json;
     }
 
-    public function convert()
+    /**
+     * @param \Slim\Http\Response $response
+     * @return \Slim\Http\Response
+     */
+    public function convert($response)
     {
-        if (isset($_GET['debug'])) {
-            echo '<xmp>';
-        }
-        /*else {
-            echo "Sory, download temporary disabled";
-            exit;
-        }*/
         switch ($this->height) {
             case 0:
                 $h = '_nopic';
@@ -125,7 +122,7 @@ abstract class Converter
         //if (!$bin) {
         $bin = $this->convertImpl($this->text_to_convert);
         //}
-        $this->makeDownload($bin);
+        return $this->makeDownload($bin, $response);
         //}
     }
 
@@ -135,7 +132,12 @@ abstract class Converter
 
     abstract protected function getExt();
 
-    protected function makeDownload($bin)
+    /**
+     * @param                     $bin
+     * @param \Slim\Http\Response $response
+     * @return \Slim\Http\Response
+     */
+    protected function makeDownload($bin, $response)
     {
         $filename = str_replace(' ', '_', $this->namemain) . ($this->height == 0 ? '_nopic' : '') . $this->getExt();
         $lastmod  = date(DATE_RFC2822, $this->touched);
@@ -150,6 +152,16 @@ abstract class Converter
         header('Content-Length: ' . strlen($bin));
         flush();
         print $bin;
+//        return $response->withHeader("Pragma", "public")
+//            ->withHeader("Last-modified", $lastmod)
+//            ->withHeader("Expires", 0)
+//            ->withHeader("Accept-Ranges","bytes")
+//            ->withHeader("Connection", "close")
+//            ->withHeader("Content-Type", $this->getMime())
+//            ->withHeader("Content-Disposition", "attachment; filename=\"$filename\"")
+//            ->withHeader("Content-Transfer-Encoding", "binary")
+//            ->withHeader("Content-Length", strlen($bin))
+//            ->write($bin);
     }
 
     private function parseMainReleasesRow($pdb)
