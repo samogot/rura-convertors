@@ -58,12 +58,43 @@ class DocxConverter extends Converter
 
         $images = [];
         if ($this->cover) {
-            $cover                = $this->cover;
-            $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $cover) . "\"/></coverpage>";
+			$innerHeight = $this->height;
+			$cover = $this->cover;
+			$image = $this->images[$cover];
+			$thumbnail = sprintf($image['thumbnail'], $this->height);
+		
+			$innerImageUrl = $image['url'];
+			$innerResizedWidth = $image['width'];
+			$innerResizedHeight = $image['height'];
+		
+			if (file_get_contents($thumbnail, 0, null, 0, 1)) {
+				$innerAspectRatio = $image['width'] / $image['height'];
+				if ($innerHeight > 0) {
+					if ($innerAspectRatio > 1.0) {
+						$innerResizedWidth  = $innerHeight;
+						$innerResizedHeight = $innerHeight / $innerAspectRatio;
+					} else {
+						$innerResizedHeight = $innerHeight;
+						$innerResizedWidth  = $innerHeight * $innerAspectRatio;
+					}
+				}
+				
+				if (!$innerAspectRatio) {
+					return "";
+				}
+
+				$innerImageUrl = sprintf($image['thumbnail'], $innerResizedWidth);						
+			}
+
+			/* Width and height are unimportant. Actual resizing is done not in this class. We must save aspect ratio though. */
+			$descr['coverpage']  = "<img src=\"" . $innerImageUrl . "\" width=\"" . $innerResizedWidth . "\" height=\"" . $innerResizedHeight . "\" />";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
         }
 
+	//	echo $descr['coverpage'];
+//		exit;
+		
         if ($this->translators) {
             foreach ($this->translators as $translator) {
                 $descr['translator'] .= "<p name=\"translator\">$translator</p>";
@@ -137,11 +168,12 @@ class DocxConverter extends Converter
             $text = preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u', '', $text);
 
         } else {
-            $innerHeight = $this->height;
+            
             $text        = preg_replace_callback(
                 '/<img[^>]*data-resource-id="(\d*)"[^>]*>/u',
-                function ($match) use (&$images) {					
+                function ($match) use (&$images) {		
 					$image = $this->images[$match[1]];
+					$innerHeight = $this->height;
 					$thumbnail = sprintf($image['thumbnail'], $this->height);
 				
 				    $innerImageUrl = $image['url'];
@@ -150,7 +182,6 @@ class DocxConverter extends Converter
 				
                     if (file_get_contents($thumbnail, 0, null, 0, 1)) {
                         $innerAspectRatio = $image['width'] / $image['height'];
-                        $innerImageUrl    = null;
                         if ($innerHeight > 0) {
                             if ($innerAspectRatio > 1.0) {
                                 $innerResizedWidth  = $innerHeight;
@@ -167,7 +198,7 @@ class DocxConverter extends Converter
 
                         $innerImageUrl = sprintf($image['thumbnail'], $innerResizedWidth);						
                     }
-
+				
                     /* Width and height are unimportant. Actual resizing is done not in this class. We must save aspect ratio though. */
                     return "<img src=\"" . $innerImageUrl . "\" width=\"" . $innerResizedWidth . "\" height=\"" . $innerResizedHeight . "\" />";
                 },
@@ -201,7 +232,7 @@ class DocxConverter extends Converter
 		$descr[coverpage]
 		$descr[author]
 		$descr[sequence]
-	        $descr[annotation]
+	    $descr[annotation]
 		$credit
 		$text
 	</body>
@@ -307,6 +338,8 @@ class DocxConverter extends Converter
 
         $bin = file_get_contents($h2d_file_uri);
         unlink($h2d_file_uri);
+//echo 'sdfjnsdlkvjn';
+//exit;
         return $bin;
     }
 }

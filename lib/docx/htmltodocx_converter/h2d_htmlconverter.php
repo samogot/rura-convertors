@@ -935,9 +935,11 @@ function htmltodocx_insert_html_recursive(&$phpword_object, $phpword_element, $h
           $src = htmltodocx_doc_root() . $state['base_path'] . $element_src; 
         }
 		
-		if (file_exists($src))
-		{
 		
+		
+		//if (file_exists($src))
+	    if (file_get_contents($src, 0, null, 0, 1))
+		{
 			$switchFromPortraitToLandscape = FALSE;
 			if ($element->height && $element->width) 
 			{

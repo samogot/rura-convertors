@@ -45,7 +45,9 @@ class Fb2Converter extends Converter
         $images = [];
         if ($this->cover) {
             $cover                = $this->cover;
-            $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $cover) . "\"/></coverpage>";
+			$image                = $this->images[$cover];
+			$thumbnail            = sprintf($image['thumbnail'], $this->height);
+            $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $thumbnail) . "\"/></coverpage>";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
         }
@@ -137,9 +139,9 @@ class Fb2Converter extends Converter
             $text = preg_replace_callback(
                 '/<img[^>]*data-resource-id="(\d*)"[^>]*>/u',
                 function ($match) use (&$images) {
-                    $image = $this->images[$match[1]];
+					$image = $this->images[$match[1]];
 					$thumbnail = sprintf($image['thumbnail'], $this->height);
-					$images[] = $thumbnail;
+					$images[] = $match[1];
                     return "<image l:href=\"#" . str_replace(' ', '_', $thumbnail) . "\"/>";
                 },
                 $text
@@ -167,15 +169,14 @@ class Fb2Converter extends Converter
         }
 
         $binary = "";
+		
         if ($images) {
-            foreach ($images as $index => $image) {
-                if (file_get_contents($image, 0, null, 0, 1)) {
-
-                    $fileContents = file_get_contents($image);
-                    $finfo        = new \finfo(FILEINFO_MIME);
-                    $mimeType     = $finfo->buffer($fileContents);
-//$image_url=$_SERVER['DOCUMENT_ROOT'].$file->transform(array('width'=>$this->height*2+300,'height'=>$this->height?$this->height:null))->getUrl();
-                    $binary .= '<binary id="' . $image . '" content-type="' . $mimeType . '">' . "\n" . base64_encode(
+            foreach ($images as $imageid) {
+				$image = $this->images[$imageid];
+				$thumbnail = sprintf($image['thumbnail'], $this->height);
+                if (file_get_contents($thumbnail, 0, null, 0, 1)) {
+                    $fileContents = file_get_contents($thumbnail);
+                    $binary .= '<binary id="' . $thumbnail . '" content-type="' . $image['mime_type'] . '">' . "\n" . base64_encode(
                             $fileContents
                         ) . "\n</binary>";
                 }
