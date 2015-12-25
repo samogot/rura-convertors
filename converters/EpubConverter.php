@@ -134,14 +134,20 @@ class EpubConverter extends Converter
 
         } else {
             $text = preg_replace_callback(
-                '/<img[^>]*src="([^"]*)"[^>]*>/u',
+                '/<img[^>]*data-resource-id="(\d*)"[^>]*>/u',
                 function ($match) use (&$images) {
-                    $images[] = $match[1];
-                    return "<image l:href=\"#" . str_replace(' ', '_', $match[1]) . "\"/>";
+                    $image = $this->images[$match[1]];
+					$thumbnail = sprintf($image['thumbnail'], $this->height);
+					$images[] = $match[1];
+                    return "<div class=\"center\"><img src=\"images/" . str_replace(
+                        ' ',
+                        '_',
+                        $thumbnail
+                    ) . "\" alt=\"" . str_replace(' ', '_', $thumbnail) . "\"/></div>";
+					
                 },
                 $text
             );
-
         }
 
         $j         = 0;
@@ -250,9 +256,15 @@ class EpubConverter extends Converter
 
         //
 
+		
+		
         $i = 0;
-        /*        foreach ($images as $imagename => $imagefile) {
-                    $aspectratio = ((int)$imagefile->width) / ((int)$imagefile->height);
+                foreach ($images as $imageid) {
+					$image = $this->images[$match[1]];
+					
+					var_dump($imagefile);
+					exit;
+                    $aspectratio = ($image['width']) / ($image['height']);
                     if ($this->height > 0) {
                         if ($aspectratio > 1.0) {
                             $resizedwidth  = $this->height;
@@ -262,23 +274,18 @@ class EpubConverter extends Converter
                             $resizedwidth  = ($this->height) * ($aspectratio);
                         }
 
-                        $imageurl = $_SERVER['DOCUMENT_ROOT'] . $imagefile->transform(
-                                [
-                                    'width'  => $resizedwidth,
-                                    'height' => $resizedheight,
-                                ]
-                            )->getUrl();
-                        //$imageurl=$_SERVER['DOCUMENT_ROOT'].$imagefile->transform(array('width'=>$this->height*2+300,'height'=>$this->height))->getUrl();
+						$imageurl = sprintf($image['thumbnail'], $this->height);
+                        
                         $i = $i + 1;
 
                         $epub->addFile(
-                            "images/" . str_replace(' ', '_', $imagename),
+                            "images/" . str_replace(' ', '_', $imageurl),
                             "image-$i",
                             file_get_contents($imageurl),
                             mime_content_type($imageurl)
                         );
                     }
-                }*/
+                }
 
         if ($this->isbn) {
             $epub->setIdentifier($this->isbn, 'ISBN');

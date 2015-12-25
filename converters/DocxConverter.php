@@ -75,8 +75,6 @@ class DocxConverter extends Converter
         }
 
         $descr['date2'] = date('j F Y, H:i', strtotime($this->touched));
-//        $descr['version'] = $this->revcount;
-        //$descr['src_url'] = Title::makeTitle(NS_MAIN, $this->nameurl)->getFullUrl('', false, PROTO_HTTP);
         $descr['id'] = 'RuRa_' . str_replace('/', '_', $this->nameurl);
 
         if ($this->isbn) {
@@ -141,19 +139,17 @@ class DocxConverter extends Converter
         } else {
             $innerHeight = $this->height;
             $text        = preg_replace_callback(
-                '/<img[^>]*src="([^"]*)"[^>]*>/u',
-                function ($match) use (&$images) {
-
-                    $image = $match[1];
-
-                    if (file_get_contents($image, 0, null, 0, 1)) {
-                        $img  = file_get_contents($image);
-                        $temp = tmpfile();
-                        file_put_contents($temp, $img);
-
-                        $width            = imagesx($im);
-                        $height           = imagesy($im);
-                        $innerAspectRatio = $width / $height;
+                '/<img[^>]*data-resource-id="(\d*)"[^>]*>/u',
+                function ($match) use (&$images) {					
+					$image = $this->images[$match[1]];
+					$thumbnail = sprintf($image['thumbnail'], $this->height);
+				
+				    $innerImageUrl = $image['url'];
+					$innerResizedWidth = $image['width'];
+					$innerResizedHeight = $image['height'];
+				
+                    if (file_get_contents($thumbnail, 0, null, 0, 1)) {
+                        $innerAspectRatio = $image['width'] / $image['height'];
                         $innerImageUrl    = null;
                         if ($innerHeight > 0) {
                             if ($innerAspectRatio > 1.0) {
@@ -164,46 +160,19 @@ class DocxConverter extends Converter
                                 $innerResizedWidth  = $innerHeight * $innerAspectRatio;
                             }
                         }
+						
                         if (!$innerAspectRatio) {
                             return "";
                         }
 
-                        $innerImageUrl = $_SERVER['DOCUMENT_ROOT'] . $temp->transform(
-                                [
-                                    'width'  => $innerResizedWidth,
-                                    'height' => $innerResizedHeight,
-                                ]
-                            )->getUrl();
-
+                        $innerImageUrl = sprintf($image['thumbnail'], $innerResizedWidth);						
                     }
 
-                    $innerImageUrl = null;
-                    if ($innerHeight > 0) {
-                        if ($innerAspectRatio > 1.0) {
-                            $innerResizedWidth  = $innerHeight;
-                            $innerResizedHeight = $innerHeight / $innerAspectRatio;
-                        } else {
-                            $innerResizedHeight = $innerHeight;
-                            $innerResizedWidth  = $innerHeight * $innerAspectRatio;
-                        }
-                    }
-
-                    if (!$innerAspectRatio) {
-                        return "";
-                    }
-
-                    $innerImageUrl = $_SERVER['DOCUMENT_ROOT'] . $innerImageFile->transform(
-                            [
-                                'width'  => $innerResizedWidth,
-                                'height' => $innerResizedHeight,
-                            ]
-                        )->getUrl();
                     /* Width and height are unimportant. Actual resizing is done not in this class. We must save aspect ratio though. */
-                    return "<img src=\"" . $innerImageUrl . "\" width=\"" . $innerImageFile->width . "\" height=\"" . $innerImageFile->height . "\" />";
+                    return "<img src=\"" . $innerImageUrl . "\" width=\"" . $innerResizedWidth . "\" height=\"" . $innerResizedHeight . "\" />";
                 },
                 $text
             );
-
         }
 
         $j         = 0;

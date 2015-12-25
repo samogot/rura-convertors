@@ -19,7 +19,6 @@ class Fb2Converter extends Converter
 
     protected function convertImpl($text)
     {
-
         $descr['book_title'] = $this->nameru;
         foreach ([$this->author, $this->illustrator] as $aut) {
             if ($aut) {
@@ -63,7 +62,6 @@ class Fb2Converter extends Converter
         }
 
         $descr['date2'] = '<date value=' . date('"Y-m-d">j F Y, H:i', strtotime($this->touched)) . '</date>';
-        //$descr['src_url']=Title::makeTitle(NS_MAIN,$this->nameurl)->getFullUrl('',false,PROTO_HTTP);
         $descr['id'] = 'RuRa_' . str_replace('/', '_', $this->nameurl);
 
         $descr['isbn'] = "";
@@ -135,17 +133,17 @@ class Fb2Converter extends Converter
 
         if ($this->height == 0) {
             $text = preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u', '', $text);
-
         } else {
             $text = preg_replace_callback(
-                '/<img[^>]*src="([^"]*)"[^>]*>/u',
+                '/<img[^>]*data-resource-id="(\d*)"[^>]*>/u',
                 function ($match) use (&$images) {
-                    $images[] = $match[1];
-                    return "<image l:href=\"#" . str_replace(' ', '_', $match[1]) . "\"/>";
+                    $image = $this->images[$match[1]];
+					$thumbnail = sprintf($image['thumbnail'], $this->height);
+					$images[] = $thumbnail;
+                    return "<image l:href=\"#" . str_replace(' ', '_', $thumbnail) . "\"/>";
                 },
                 $text
             );
-
         }
 
         $j         = 0;

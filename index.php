@@ -140,6 +140,35 @@ $app->get(
             }
         }
 
+		preg_match_all('/data-resource-id="(\d+)"/', $text, $matches);		
+		unset($matches[0]);		
+		
+		$images_temp = $db->select(
+            'external_resources',
+            [
+                'resource_id',
+                'mime_type',
+                'url',
+				'thumbnail',
+				'width',
+				'height'
+            ],
+            [
+                'resource_id' => $matches[1],
+            ]
+        );
+		
+		$images = array();
+		for ($i = 0; $i < sizeof($images_temp); $i++)
+		{
+			$temp = $images_temp[$i];			
+			$images[$temp['resource_id']] = array('mime_type' => $temp['mime_type'], 
+			                                      'url' => $temp['url'], 
+												  'thumbnail' => $temp['thumbnail'], 
+												  'width' => $temp['width'], 
+												  'height' => $temp['height']);
+		}
+		
         $pdb       = [
             'annotation'   => $volume['annotation'],
             'author'       => $volume['author'],
@@ -157,6 +186,7 @@ $app->get(
             'name_main'    => $volume['name_file'],
             'workers'      => $workers,
             'footnotes'    => $footnotes,
+			'images'       => $images
         ];
         $converter = null;
         switch ($format) {
