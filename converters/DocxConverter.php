@@ -282,6 +282,10 @@ class DocxConverter extends Converter
 		//PHPWord doesn't support tags nested in link element. Unnest images from them
 		$epubText = preg_replace('@<a[^>]*>(<img[^>]*>)</a>@', "\\1", $epubText);
 		
+		// Delete extra page breaks related to images.
+		$epubText = preg_replace('@<div[^>]*>(<img[^>]*>)</div>@', "\\1", $epubText);
+		$epubText = preg_replace('@<p[^>]*>(<img[^>]*>)</p>@', "\\1", $epubText);
+		
         $phpword_object = new \PhpOffice\PhpWord\PhpWord();
         \PhpOffice\PhpWord\Settings::setCompatibility(false);
 
