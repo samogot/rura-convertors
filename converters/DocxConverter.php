@@ -278,7 +278,10 @@ class DocxConverter extends Converter
 
         // Styles of elements in which footnote is nested should not count. Thus close them
         $epubText = preg_replace('@pb@', "br", $epubText);
-
+		
+		//PHPWord doesn't support tags nested in link element. Unnest images from them
+		$epubText = preg_replace('@<a[^>]*>(<img[^>]*>)</a>@', "\\1", $epubText);
+		
         $phpword_object = new \PhpOffice\PhpWord\PhpWord();
         \PhpOffice\PhpWord\Settings::setCompatibility(false);
 
@@ -327,6 +330,10 @@ class DocxConverter extends Converter
 
         htmltodocx_insert_html($phpword_object, $html_dom_array[0]->nodes, $initial_state);
 
+				
+		//var_dump($html_dom_array[0]->nodes);
+//		exit;
+		
         $html_dom->clear();
         unset($html_dom);
         $h2d_file_uri = tempnam(sys_get_temp_dir(), 'htd');
