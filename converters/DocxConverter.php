@@ -206,24 +206,14 @@ class DocxConverter extends Converter
             );
         }
 
-        $j         = 0;
-        $notes     = '';
-        $isnotes   = false;
-        $footnotes = explode(',;,', $this->footnotes);
-        for ($i = 0; $i < sizeof($footnotes); $i++) {
-            if (is_numeric($footnotes[$i])) {
-                $j = 0;
-                if ($isnotes == false) {
-                    $notes .= "<body name=\"notes\">\n\t<title><p>Примечания</p></title>\n";
-                }
-                $isnotes = true;
-                $notes .= "\t<section id=\"cite_note-$footnotes[$i]\">\n\t\t<title><p>$j</p></title>\n\t\t<p>" . $footnotes[$i + 1] . "</p>\n\t</section>\n";
+		
+		$footnotes = array();
+        $footnotes_temp = explode(',;,', $this->footnotes);
+        for ($i = 0; $i < sizeof($footnotes_temp); $i++) {
+            if (is_numeric($footnotes_temp[$i])) {
+                $footnotes[$footnotes_temp[$i]] = $footnotes_temp[$i + 1];
                 $i++;
-                $j++;
             }
-        }
-        if ($isnotes == true) {
-            $notes .= '</body>';
         }
 
         $text     = trim($text);
@@ -238,6 +228,28 @@ class DocxConverter extends Converter
 	</body>
 	</html>";
 
+	
+		$epubText = preg_replace_callback(
+                '@(<span[^>]*><a href="#cite_note-(\d*)"[^>]*>.{0,10}</span>)@',
+                function ($match) use (&$footnotes) {
+					$footnote = $footnotes[$match[2]];
+					if ($footnote)
+					{
+						return '<footnote>'.$footnote.'</footnote>';
+					}
+					else
+					{
+						return $match[1];
+					}
+                },
+                $epubText
+            );
+		
+		//preg_replace('@cite_note-(\d*)@',"<footnote></footnote>", $epubText);
+		//echo '<xmp>'.$epubText;
+		//echo $footnotes[137603266];
+		//exit;
+	
         $epubText = preg_replace('@section@', "div", $epubText);
 
         /* Delete extra <br/> tag before images */
