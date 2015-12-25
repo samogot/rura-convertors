@@ -230,7 +230,7 @@ class DocxConverter extends Converter
 
 	
 		$epubText = preg_replace_callback(
-                '@(<span[^>]*><a href="#cite_note-(\d*)"[^>]*>.{0,10}</span>)@',
+                '@(<span[^>]*><a href="#cite_note-(\d*)"[^>]*>.{0,15}</span>)@',
                 function ($match) use (&$footnotes) {
 					$footnote = $footnotes[$match[2]];
 					if ($footnote)
@@ -253,36 +253,10 @@ class DocxConverter extends Converter
         $epubText = preg_replace('@section@', "div", $epubText);
 
         /* Delete extra <br/> tag before images */
-        $epubText = preg_replace('@<div>(.){0,20}<br/>(.){0,20}<img src@s', '<div><img src', $epubText);
-
-        /* Swap h2 and img tags if img follows h2. (It gave a bad look in docx). Also deletes <pb/> tag which is
-           redunt after swap. */
-        $epubText = preg_replace('@<pb/>(<h2>.{0,100}</h2>).{0,20}(<img .{0,200}/>)@s', '\\2\\1', $epubText);
-        $epubText = preg_replace('@(<h2>.{0,100}</h2>).{0,20}(<img .{0,200}/>)@s', '\\2\\1', $epubText);
-
-        /* Delete extra <pb/> tag in case immediately before <pb/> there is an image */
-
-        $epubText = preg_replace('@(<img.*?/>)(.{0,20})<pb/><h2>@', '\\1\\2<h2>', $epubText);
-
-        /* After swap we often needs to further lift img tag in previous <div> tag */
-        $epubText = preg_replace(
-            '@</div>.{0,20}<div>.{0,20}(<img.{0,200}/>).{0,20}<h2@s',
-            '\\1</div><div><h2',
-            $epubText
-        );
-
-        /* After swap we often needs to further lift img tag in previous <div> tag */
-        $epubText = preg_replace(
-            '@</div>.{0,20}<div>.{0,20}(<img.{0,200}/>).{0,20}<h2@s',
-            '\\1</div><div><h2',
-            $epubText
-        );
+        $epubText = preg_replace('@<div>(.){0,20}<br/>(.){0,20}<img src@', '<div><img src', $epubText);
 
         /* Eliminate caret return before <h1> (Each div starts with caret return in h2d_htmlconverter.php) */
-        $epubText = preg_replace('@\s*<div>(.{0,40})(<h1>.*?</h1>)@s', '\\1\\2<div>', $epubText);
-
-        /* Suddenly realized, that without page breaks it is better). Just delete the next line to add page breaks. */
-        $epubText = preg_replace('@pb@', "br", $epubText);
+        $epubText = preg_replace('@\s*<div>(.{0,40})(<h1>.*?</h1>)@', '\\1\\2<div>', $epubText);
 
         /* NGNL Specific names */
         //$text=str_replace('<span style="position: relative; text-indent: 0;"><span style="display: inline-block; font-style: normal">&#12302;&#12288;&#12288;&#12288;&#12303;</span><span style="position: absolute; font-size: .7em; top: -11px; left: 50%"><span style="position: relative; left: -50%;">','&#12302;<sup>',$text);
@@ -297,6 +271,24 @@ class DocxConverter extends Converter
 		// Delete extra page breaks related to images.
 		$epubText = preg_replace('@<div[^>]*>(<img[^>]*>)</div>@', "\\1", $epubText);
 		$epubText = preg_replace('@<p[^>]*>(<img[^>]*>)</p>@', "\\1", $epubText);
+		
+		/* Swap h2 and img tags if img follows h2. (It gave a bad look in docx). */
+        $epubText = preg_replace('@(<h2>.{0,100}</h2>)(<img[^>]*>)@', '\\2\\1', $epubText);
+
+        /* After swap we often needs to further lift img tag in previous <div> or <p> tag */
+        $epubText = preg_replace(
+            '@</div>(<img[^>]*>)<h2@',
+            '\\1</div><h2',
+            $epubText
+        );	
+        $epubText = preg_replace(
+            '@</p>(<img[^>]*>)<h2@',
+            '\\1</p><h2',
+            $epubText
+        );
+		
+		//echo '<xmp>'.$epubText;
+		//exit;
 		
         $phpword_object = new \PhpOffice\PhpWord\PhpWord();
         \PhpOffice\PhpWord\Settings::setCompatibility(false);
