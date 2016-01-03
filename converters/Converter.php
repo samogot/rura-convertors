@@ -76,7 +76,7 @@ abstract class Converter
             default:
                 $h = '_' . $this->height;
         }
-        /*$part_filename  = '/' . $this->nameurl . '/' . str_replace(' ', '_', $this->namemain) . $h . $this->getExt();
+        $part_filename  = '/' . $this->nameurl . '/' . str_replace(' ', '_', $this->namemain) . $h . $this->getExt();
         $cache_filename = 'ConvertorsCache' . $part_filename;
         $json = $this->apiCall('disk/resources', ['fields' => 'modified', 'path' => $cache_filename]);
         if (!isset($json->modified) || strtotime($this->touched) > strtotime($json->modified)) {
@@ -113,12 +113,12 @@ abstract class Converter
         );
         if (isset($json->href)) {
             header('Location: ' . $json->href);
-        } else {*/
-        //if (!$bin) {
-        $bin = $this->convertImpl($this->text_to_convert);
-        //}
-        return $this->makeDownload($bin, $response);
-        //}
+        } else {
+            if (!$bin) {
+                $bin = $this->convertImpl($this->text_to_convert);
+            }
+            return $this->makeDownload($bin, $response);
+        }
     }
 
     abstract protected function convertImpl($text);
