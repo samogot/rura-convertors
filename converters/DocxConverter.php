@@ -345,9 +345,9 @@ class DocxConverter extends Converter
         $html_dom->clear();
         unset($html_dom);
         $h2d_file_uri = tempnam(sys_get_temp_dir(), 'htd');
-        if ($h2d_file_uri === false) {
+        /*if ($h2d_file_uri === false) {
             var_dump(sys_get_temp_dir());
-        }
+        }*/
         $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpword_object, 'Word2007');
         $objWriter->save($h2d_file_uri);
 

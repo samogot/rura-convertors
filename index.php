@@ -92,7 +92,7 @@ $app->get(
                 '[>]team_members(tmm)'     => 'member_id',
                 '[>]teams(tm)'             => ['tmm.team_id' => 'team_id'],
             ],
-            ['release_activity_id', 'activity_id', 'activity_name', 'team_name', 'nikname(nickname)', 'team_hidden'],
+            ['release_activity_id', 'activity_id', 'activity_name', 'team_name', 'nickname', 'team_hidden'],
             ['volume_id' => $volume['volume_id']]
         );
         $teams       = [];
@@ -109,7 +109,7 @@ $app->get(
             $workers[$activity['activity_name']][] = $activity['nickname'];
         }
         asort($teams);
-        $teams = array_keys($teams);
+        $teams       = array_keys($teams);
         $translators = array_keys($translators);
         sort($translators);
         $texts = $db->select(
@@ -140,35 +140,41 @@ $app->get(
             }
         }
 
-		preg_match_all('/data-resource-id="(\d+)"/', $text, $matches);		
-		unset($matches[0]);		
-		
-		$images_temp = $db->select(
-            'external_resources',
-            [
-                'resource_id',
-                'mime_type',
-                'url',
-				'thumbnail',
-				'width',
-				'height'
-            ],
-            [
-                'resource_id' => $matches[1],
-            ]
-        );
-		
-		$images = array();
-		for ($i = 0; $i < sizeof($images_temp); $i++)
-		{
-			$temp = $images_temp[$i];			
-			$images[$temp['resource_id']] = array('mime_type' => $temp['mime_type'], 
-			                                      'url' => $temp['url'], 
-												  'thumbnail' => $temp['thumbnail'], 
-												  'width' => $temp['width'], 
-												  'height' => $temp['height']);
-		}
-		
+        preg_match_all('/data-resource-id="(\d+)"/', $text, $matches);
+        unset($matches[0]);
+
+        if ($matches[1]) {
+            $images_temp =
+                $db->select(
+                    'external_resources',
+                    [
+                        'resource_id',
+                        'mime_type',
+                        'url',
+                        'thumbnail',
+                        'width',
+                        'height'
+                    ],
+                    [
+                        'resource_id' => $matches[1],
+                    ]
+                );
+        } else {
+            $images_temp = [];
+        }
+
+        $images = array();
+        for ($i = 0; $i < sizeof($images_temp); $i++) {
+            $temp                         = $images_temp[$i];
+            $images[$temp['resource_id']] = [
+                'mime_type' => $temp['mime_type'],
+                'url'       => $temp['url'],
+                'thumbnail' => $temp['thumbnail'],
+                'width'     => $temp['width'],
+                'height'    => $temp['height']
+            ];
+        }
+
         $pdb       = [
             'annotation'   => $volume['annotation'],
             'author'       => $volume['author'],
@@ -186,7 +192,7 @@ $app->get(
             'name_main'    => $volume['name_file'],
             'workers'      => $workers,
             'footnotes'    => $footnotes,
-			'images'       => $images
+            'images'       => $images
         ];
         $converter = null;
         switch ($format) {

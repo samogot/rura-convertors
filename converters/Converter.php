@@ -1,5 +1,6 @@
 <?php
 namespace Ruranobe\Converters;
+
 /**
  * Class RuraConverter
  * Author: Keiko
@@ -36,7 +37,8 @@ abstract class Converter
         $this->text_to_convert = $text;
         $this->config          = $config;
     }
-    private function apiÑall($function, $params, $opts_var = null)
+
+    private function apiCall($function, $params, $opts_var = null)
     {
         if (!isset($opts_var) || !$opts_var) {
             $opts_var = [];
@@ -57,6 +59,7 @@ abstract class Converter
         }
         return $json;
     }
+
     /**
      * @param \Slim\Http\Response $response
      * @return \Slim\Http\Response
@@ -75,15 +78,15 @@ abstract class Converter
         }
         /*$part_filename  = '/' . $this->nameurl . '/' . str_replace(' ', '_', $this->namemain) . $h . $this->getExt();
         $cache_filename = 'ConvertorsCache' . $part_filename;
-        $json = $this->apiÑall('disk/resources', ['fields' => 'modified', 'path' => $cache_filename]);
+        $json = $this->apiCall('disk/resources', ['fields' => 'modified', 'path' => $cache_filename]);
         if (!isset($json->modified) || strtotime($this->touched) > strtotime($json->modified)) {
             $bin  = $this->convertImpl($this->text_to_convert);
-            $json = $this->apiÑall('disk/resources', ['path' => dirname($cache_filename)], [CURLOPT_PUT => true]);
+            $json = $this->apiCall('disk/resources', ['path' => dirname($cache_filename)], [CURLOPT_PUT => true]);
             if (isset($json->error) && $json->error == 'DiskPathDoesntExistsError') {
-                $this->apiÑall('disk/resources', ['path' => dirname(dirname($cache_filename))], [CURLOPT_PUT => true]);
-                $this->apiÑall('disk/resources', ['path' => dirname($cache_filename)], [CURLOPT_PUT => true]);
+                $this->apiCall('disk/resources', ['path' => dirname(dirname($cache_filename))], [CURLOPT_PUT => true]);
+                $this->apiCall('disk/resources', ['path' => dirname($cache_filename)], [CURLOPT_PUT => true]);
             }
-            $json = $this->apiÑall('disk/resources/upload', ['overwrite' => 'true', 'path' => $cache_filename]);
+            $json = $this->apiCall('disk/resources/upload', ['overwrite' => 'true', 'path' => $cache_filename]);
             if (!empty($json->href)) {
                 $tmpfile = tempnam(sys_get_temp_dir(), 'cvcache');
                 file_put_contents($tmpfile, $bin);
@@ -104,7 +107,7 @@ abstract class Converter
                 trigger_error("Cannot upload convertor cache - no upload link", E_USER_WARNING);
             }
         }
-        $json = $this->apiÑall(
+        $json = $this->apiCall(
             'disk/public/resources/download',
             ['path' => $part_filename, 'public_key' => $this->config['public_key']]
         );
@@ -117,9 +120,13 @@ abstract class Converter
         return $this->makeDownload($bin, $response);
         //}
     }
+
     abstract protected function convertImpl($text);
+
     abstract protected function getMime();
+
     abstract protected function getExt();
+
     /**
      * @param                     $bin
      * @param \Slim\Http\Response $response
@@ -151,6 +158,7 @@ abstract class Converter
 //            ->withHeader("Content-Length", strlen($bin))
 //            ->write($bin);
     }
+
     private function parseMainReleasesRow($pdb)
     {
         $this->annotation  = $pdb['annotation'];
