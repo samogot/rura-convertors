@@ -194,6 +194,15 @@ class Fb2Converter extends Converter
 		$text = preg_replace('@<h3[^>]*>([^<]*)<\/h3@', '<title><p>\\1</p></title', $text);
 		$text = preg_replace('@<h4[^>]*>([^<]*)<\/h4@', '<title><p>\\1</p></title', $text);
 		
+		// insert sections
+		$text = preg_replace('@<title>@', '</section><section><title>', $text);
+		
+		// delete first </section> tag which doesn't have a matching <section> tag because of the previous step
+		$text = preg_replace('@</section><section><title>@', '<section><title>', $text, 1);
+		
+		// insert closing section tag at the end
+		$text .= "</section>";
+		
 		// delete p tag attributes such as data-chapter-id and so on.
 		$text = preg_replace('@<p[^>]*>@', '<p>', $text);
 		
