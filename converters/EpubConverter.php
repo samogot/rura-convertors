@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 namespace Ruranobe\Converters;
 
 require_once(__DIR__ . '/../lib/docx/htmltodocx_converter/h2d_htmlconverter.php');
@@ -189,6 +189,12 @@ class EpubConverter extends Converter
 
         /* Eliminate warning "element "br" not allowed here;..." */
         $epubText = preg_replace('@(<br.*?/>)@', "<p>\\1</p>", $epubText);
+		
+		// delete p tag attributes such as data-chapter-id and so on.
+		$epubText = preg_replace('@<p[^>]*>@', '<p>', $epubText);
+		
+		// delete strange tags combination which i saw once in fb2 
+		$epubText = preg_replace('@<p></p>@', '', $epubText);	
 
         $epub = new \PHPePub\Core\EPub();
 

@@ -258,6 +258,12 @@ class DocxConverter extends Converter
         /* Eliminate caret return before <h1> (Each div starts with caret return in h2d_htmlconverter.php) */
         $epubText = preg_replace('@\s*<div>(.{0,40})(<h1>.*?</h1>)@', '\\1\\2<div>', $epubText);
 
+		// delete p tag attributes such as data-chapter-id and so on.
+		$epubText = preg_replace('@<p[^>]*>@', '<p>', $epubText);
+		
+		// delete strange tags combination which i saw once in fb2 
+		$epubText = preg_replace('@<p></p>@', '', $epubText);	
+		
         /* NGNL Specific names */
         //$text=str_replace('<span style="position: relative; text-indent: 0;"><span style="display: inline-block; font-style: normal">&#12302;&#12288;&#12288;&#12288;&#12303;</span><span style="position: absolute; font-size: .7em; top: -11px; left: 50%"><span style="position: relative; left: -50%;">','&#12302;<sup>',$text);
         //$text=str_replace('</span></span></span>','</sup>&#12303;',$text);
