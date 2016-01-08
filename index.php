@@ -153,7 +153,8 @@ $app->get(
                         'url',
                         'thumbnail',
                         'width',
-                        'height'
+                        'height',
+                        'title'
                     ],
                     [
                         'resource_id' => $matches[1],
@@ -171,7 +172,8 @@ $app->get(
                 'url'       => $temp['url'],
                 'thumbnail' => $temp['thumbnail'],
                 'width'     => $temp['width'],
-                'height'    => $temp['height']
+                'height'    => $temp['height'],
+                'title'     => $temp['title']
             ];
         }
 

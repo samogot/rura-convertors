@@ -40,14 +40,15 @@ class Fb2Converter extends Converter
             }
         }
 
-        $descr['annotation'] = '<annotation>' . $this->annotation . '</annotation>';
+        $descr['annotation'] = '<annotation><p>' . $this->annotation . '</p></annotation>';
 
         $images = [];
         if ($this->cover) {
             $cover                = $this->cover;
 			$image                = $this->images[$cover];
-			$thumbnail            = sprintf($image['thumbnail'], $this->height);
-            $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $thumbnail) . "\"/></coverpage>";
+			//$thumbnail            = sprintf($image['thumbnail'], $this->height);
+			$title                = $image['title'];
+            $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $title) . "\"/></coverpage>";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
         }
@@ -140,9 +141,12 @@ class Fb2Converter extends Converter
                 '/<img[^>]*data-resource-id="(\d*)"[^>]*>/u',
                 function ($match) use (&$images) {
 					$image = $this->images[$match[1]];
-					$thumbnail = sprintf($image['thumbnail'], $this->height);
+					/*$thumbnail = sprintf($image['thumbnail'], $this->height);
+					
+					strrpos($thumbnail, '/')*/
 					$images[] = $match[1];
-                    return "<image l:href=\"#" . str_replace(' ', '_', $thumbnail) . "\"/>";
+					$title = $image['title'];
+                    return "<image l:href=\"#" . str_replace(' ', '_', $title) . "\"/>";
                 },
                 $text
             );
@@ -176,13 +180,43 @@ class Fb2Converter extends Converter
 				$thumbnail = sprintf($image['thumbnail'], $this->height);
                 if (file_get_contents($thumbnail, 0, null, 0, 1)) {
                     $fileContents = file_get_contents($thumbnail);
-                    $binary .= '<binary id="' . $thumbnail . '" content-type="' . $image['mime_type'] . '">' . "\n" . base64_encode(
+					$title = $image['title'];
+                    $binary .= '<binary id="' . $title . '" content-type="' . $image['mime_type'] . '">' . "\n" . base64_encode(
                             $fileContents
                         ) . "\n</binary>";
                 }
             }
         }
 
+		// replace invalid for fb2 format h1-h4 headers with title
+		$text = preg_replace('@<h1[^>]*>([^<]*)<\/h1@', '<title><p>\\1</p></title', $text);
+		$text = preg_replace('@<h2[^>]*>([^<]*)<\/h2@', '<title><p>\\1</p></title', $text);
+		$text = preg_replace('@<h3[^>]*>([^<]*)<\/h3@', '<title><p>\\1</p></title', $text);
+		$text = preg_replace('@<h4[^>]*>([^<]*)<\/h4@', '<title><p>\\1</p></title', $text);
+		
+		// delete p tag attributes such as data-chapter-id and so on.
+		$text = preg_replace('@<p[^>]*>@', '<p>', $text);
+		
+		// delete strange tags combination which i saw once in fb2 
+		$text = preg_replace('@<p></p>@', '', $text);		
+		
+		// xml tags in attributes are not supported. Delete xml tags from data-content attribute
+		$text = preg_replace('@(data-content[^\"]*\"[^\"]*)<[^>]*>([^\<]*)<\/[^>]*>([^\"]*\")@', '\\1\\2\\3', $text);	
+		
+		// replace <i>text</i> with <emphasis>text</emphasis> and <b>text</b> with <strong>text</strong>
+		$text = preg_replace('@<i>(.*?)<\/i>@', '<emphasis>\\1</emphasis>', $text);	
+		$text = preg_replace('@<b>(.*?)<\/b>@', '<strong>\\1</strong>', $text);	
+		
+		// delete unsupported div tags
+		$text = preg_replace('@<div[^>]*>(.*?)<\/div>@u', '\\1', $text);	
+		
+		// change href to l:href and delete unsupported a attributes
+		$text = preg_replace('@<a(.*?)(href=\"[^\"]*\")(.*?)>@', '<a l:\\2>', $text);	
+		
+		// replace <i>text</i> with <emphasis>text</emphasis> and <b>text</b> with <strong>text</strong>
+		$notes = preg_replace('@<i>(.*?)<\/i>@', '<emphasis>\\1</emphasis>', $notes);	
+		$notes = preg_replace('@<b>(.*?)<\/b>@', '<strong>\\1</strong>', $notes);	
+		
 //        $text = trim($text);
 
         $fb2 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -209,14 +243,14 @@ class Fb2Converter extends Converter
 				$descr[date2]
 				<src-url>$descr[src_url]</src-url>
 				<id>$descr[id]</id>
-				<version>$descr[version]</version>
+				<version>1</version>
 			</document-info>
 			$descr[isbn]
 		</description>
 		<body>
-		<title><p>$descr[book_title]</p></title>
-	$credit
-	$text
+			<title><p>$descr[book_title]</p></title>
+			$credit
+			$text
 		</body>
 	$notes
 	$binary
