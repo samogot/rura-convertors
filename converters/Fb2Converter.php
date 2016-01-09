@@ -210,7 +210,11 @@ class Fb2Converter extends Converter
 		$text = preg_replace('@<p></p>@', '', $text);		
 		
 		// xml tags in attributes are not supported. Delete xml tags from data-content attribute
-		$text = preg_replace('@(data-content[^\"]*\"[^\"]*)<[^>]*>([^\<]*)<\/[^>]*>([^\"]*\")@', '\\1\\2\\3', $text);	
+		//$text = preg_replace('@(data-content[^\"]*\"[^\"]*)<[^>]*>([^\<]*)<\/[^>]*>([^\"]*\")@', '\\1\\2\\3', $text);	
+		
+		// delete data-content attribute
+		$text = preg_replace('@data-content.*?class="[^>]*@', '', $text);	
+		//$text = preg_replace('@(data-content[^\"]*\"[^\"]*\")@', '', $text);	
 		
 		// replace <i>text</i> with <emphasis>text</emphasis> and <b>text</b> with <strong>text</strong>
 		$text = preg_replace('@<i>(.*?)<\/i>@', '<emphasis>\\1</emphasis>', $text);	
@@ -219,12 +223,24 @@ class Fb2Converter extends Converter
 		// delete unsupported div tags
 		$text = preg_replace('@<div[^>]*>(.*?)<\/div>@u', '\\1', $text);	
 		
+		// delete unsupported span tags
+		$text = preg_replace('@<span[^>]*>(.*?)<\/span>@u', '\\1', $text);	
+		
+		// delete unsupported img tags
+		$text = preg_replace('@<img [^>]*>(.*?)<\/img>@u', '\\1', $text);	
+		$text = preg_replace('@<img.*?\/>@u', '', $text);	
+		
 		// change href to l:href and delete unsupported a attributes
 		$text = preg_replace('@<a(.*?)(href=\"[^\"]*\")(.*?)>@', '<a l:\\2>', $text);	
 		
 		// replace <i>text</i> with <emphasis>text</emphasis> and <b>text</b> with <strong>text</strong>
 		$notes = preg_replace('@<i>(.*?)<\/i>@', '<emphasis>\\1</emphasis>', $notes);	
 		$notes = preg_replace('@<b>(.*?)<\/b>@', '<strong>\\1</strong>', $notes);	
+		
+		// change href to l:href and delete unsupported a attributes
+		$notes = preg_replace('@<a(.*?)(href=\"[^\"]*\")(.*?)>@', '<a l:\\2>', $notes);	
+		
+		
 		
 //        $text = trim($text);
 
