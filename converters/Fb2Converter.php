@@ -194,6 +194,9 @@ class Fb2Converter extends Converter
 		$text = preg_replace('@<h3[^>]*>([^<]*)<\/h3@', '<title><p>\\1</p></title', $text);
 		$text = preg_replace('@<h4[^>]*>([^<]*)<\/h4@', '<title><p>\\1</p></title', $text);
 		
+		// delete unnecessary paragraph tag
+		$text = preg_replace('@<p[^>]*><title>.*?</title></p>@', '', $text);
+		
 		// insert sections
 		$text = preg_replace('@<title>@', '</section><section><title>', $text);
 		
