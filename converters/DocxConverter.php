@@ -122,16 +122,19 @@ class DocxConverter extends Converter
 				          <p><a href="http://ruranobe.ru">http://ruranobe.ru</a></p>
  				          <p>Чтобы оставаться в курсе всех новостей, вступайте в нашу группу в Контакте:</p>
 				          <p><a href="http://vk.com/ru.ranobe">http://vk.com/ru.ranobe</a></p>
-						  <p>Для желающих отблагодарить переводчика материально имеются webmoney-кошельки команды:</p>
-						  <p><b>R125820793397</b></p>
-						  <p><b>U911921912420</b></p>
-						  <p><b>Z608138208963</b></p>
-						  <p>QIWI-кошелек:</p>
-						  <p><b>+79116857099</b></p>
-						  <p>Яндекс-деньги:</p>
-						  <p><b>410012692832515</b></p>
-						  <p>А так же счет для перевода с кредитных карт:</p>
-						  <p><b>4890 4941 5384 9302</b></p>
+                          <p>Для желающих отблагодарить переводчика материально имеются webmoney-кошельки команды:</p>
+                          <p><b>R125820793397</b></p>
+                          <p><b>U911921912420</b></p>
+                          <p><b>Z608138208963</b></p>
+                          <p>QIWI-кошелек:</p>
+                          <p><b>+79116857099</b></p>
+                          <p>Яндекс-деньги:</p>
+                          <p><b>410012692832515</b></p>
+                          <p>PayPal:</p>
+                          <p><b>paypal@ruranobe.ru</b></p>
+                          <p>А так же счет для перевода с кредитных карт:</p>
+                          <p><b>4890 4941 5384 9302</b></p>
+
 						  <p>Версия от ' . date('d.m.Y', strtotime($this->touched)) . '</p>
 						  <p></p>
 						  <p></p>
@@ -258,12 +261,6 @@ class DocxConverter extends Converter
         /* Eliminate caret return before <h1> (Each div starts with caret return in h2d_htmlconverter.php) */
         $epubText = preg_replace('@\s*<div>(.{0,40})(<h1>.*?</h1>)@', '\\1\\2<div>', $epubText);
 
-		// delete p tag attributes such as data-chapter-id and so on.
-		$epubText = preg_replace('@<p[^>]*>@', '<p>', $epubText);
-		
-		// delete strange tags combination which i saw once in fb2 
-		$epubText = preg_replace('@<p></p>@', '', $epubText);	
-		
         /* NGNL Specific names */
         //$text=str_replace('<span style="position: relative; text-indent: 0;"><span style="display: inline-block; font-style: normal">&#12302;&#12288;&#12288;&#12288;&#12303;</span><span style="position: absolute; font-size: .7em; top: -11px; left: 50%"><span style="position: relative; left: -50%;">','&#12302;<sup>',$text);
         //$text=str_replace('</span></span></span>','</sup>&#12303;',$text);

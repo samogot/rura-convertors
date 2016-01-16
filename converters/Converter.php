@@ -51,11 +51,16 @@ abstract class Converter
         $opts      = $opts_var + $opts_base;
         $curl      = curl_init();
         curl_setopt_array($curl, $opts);
-        $json = curl_exec($curl);
+        $json_text = curl_exec($curl);
         curl_close($curl);
-        $json = json_decode($json);
+        $json = json_decode($json_text);
         if (isset($_GET['debug']) && (!is_object($json) || isset($json->error))) {
-            var_dump($function, $params, $opts, http_build_query($params), $json);
+            var_dump(array('function'=>$function, 
+                'params'=>$params, 
+                'curl_opts'=>$opts, 
+                'curl_error'=>curl_error($curl), 
+                'result'=>($json?:$json_text)));
+            echo "\n\n";
         }
         return $json;
     }
@@ -77,8 +82,9 @@ abstract class Converter
                 $h = '_' . $this->height;
         }
         $part_filename  = '/' . $this->nameurl . '/' . str_replace(' ', '_', $this->namemain) . $h . $this->getExt();
-        $cache_filename = 'ConvertorsCache' . $part_filename;
+        $cache_filename = 'ConvertorsCacheBeta' . $part_filename;
         $json = $this->apiCall('disk/resources', ['fields' => 'modified', 'path' => $cache_filename]);
+        $bin = false;
         if (!isset($json->modified) || strtotime($this->touched) > strtotime($json->modified)) {
             $bin  = $this->convertImpl($this->text_to_convert);
             $json = $this->apiCall('disk/resources', ['path' => dirname($cache_filename)], [CURLOPT_PUT => true]);
@@ -112,11 +118,11 @@ abstract class Converter
             ['path' => $part_filename, 'public_key' => $this->config['public_key']]
         );
         if (isset($json->href)) {
-            header('Location: ' . $json->href);
+            return $response->withRedirect($json->href);
         } else {
-            if (!$bin) {
-                $bin = $this->convertImpl($this->text_to_convert);
-            }
+        if (!$bin) {
+            $bin = $this->convertImpl($this->text_to_convert);
+        }
             return $this->makeDownload($bin, $response);
         }
     }

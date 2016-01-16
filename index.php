@@ -73,7 +73,7 @@ $app->get(
             return $response->withStatus(404);
         }
 
-        $project     = $db->get('projects', ['url', 'title'], ['project_id' => $volume['project_id']]);
+        $project     = $db->get('projects', ['title'], ['project_id' => $volume['project_id']]);
         $cover       = $db->get('external_resources', 'url', ['resource_id' => [$volume['image_one']]]);
         $touched     = $db->max(
             'texts_history',
@@ -84,7 +84,7 @@ $app->get(
             'insertion_time',
             ['volume_id' => $volume['volume_id']]
         );
-        $touched     = intval($touched) ?: 0;
+        $touched     = intval($touched) ?: time();
         $activities  = $db->select(
             'volume_release_activities',
             [
@@ -190,7 +190,7 @@ $app->get(
             'isbn'         => $volume['ISBN'],
             'command'      => implode(' совместно с ', $teams),
             'touched'      => $touched,
-            'name_url'     => $project['url'],
+            'name_url'     => $project_alias . '/' . $volume_alias,
             'name_main'    => $volume['name_file'],
             'workers'      => $workers,
             'footnotes'    => $footnotes,
