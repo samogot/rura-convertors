@@ -25,6 +25,7 @@ class EpubConverter extends Converter
     protected function convertImpl($text)
     {
         $descr['book_title'] = $this->nameru;
+		$descr['author'] = "";
         foreach ([$this->author, $this->illustrator] as $aut) {
             if ($aut) {
                 foreach (explode(',', $aut) as $au) {
@@ -42,20 +43,22 @@ class EpubConverter extends Converter
                 }
             }
         }
-
-        if ($this->annotation) {
-            $descr['annotation'] = $this->annotation;
-            $descr['annotation'] = trim($descr['annotation']);
-            $descr['annotation'] = "<h2>Аннотация</h2>$descr[annotation]";
-        } else {
-            $descr['annotation'] = '';
+		
+		$descr['annotation'] = '';
+		if($this->annotation) {
+			$this->annotation = preg_replace('@\n@', '</p><p>', $this->annotation);
+			$this->annotation = preg_replace("@'''(.*?)'''@", '<b>\\1</b>', $this->annotation);
+			$this->annotation = preg_replace("@''(.*?)''@", '<i>\\1</i>', $this->annotation);
+			$this->annotation = preg_replace('@<p></p>@', '<br/>', $this->annotation);
+			$descr['annotation'] = "<h2>Аннотация</h2><p>$this->annotation</p>";
         }
-
+		
         $images = [];
-        if ($this->cover) {
-			$cover = $this->cover;
+        if ($this->covers) {
+			$cover = $this->covers[0];
 			$image = $this->images[$cover];
-			$thumbnail = sprintf($image['thumbnail'], $this->height);
+			$thumbnail = sprintf($image['thumbnail'],
+			                     min($image['width'], floor($this->height * $image['width'] / $image['height']));
 			$imagename = preg_replace('#^https?://#', '', $thumbnail);
 			$descr['coverpage'] = "<div class=\"center\"><img src=\"images/" . str_replace(
                         ' ',
@@ -140,15 +143,15 @@ class EpubConverter extends Converter
         }
         if ($this->height == 0) {
             $text = preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u', '', $text);
-
         } else {
             $text = preg_replace_callback(
-                '/<img[^>]*data-resource-id="(\d*)"[^>]*>/u',
+                '/(<a[^>]*>)?<img[^>]*data-resource-id="(\d*)"[^>]*>(<\/a>)?/u',
                 function ($match) use (&$images) {
-                    $image = $this->images[$match[1]];
-					$thumbnail = sprintf($image['thumbnail'], $this->height);
+                    $image = $this->images[$match[2]];
+					$thumbnail = sprintf($image['thumbnail'], 
+					                     min($image['width'], floor($this->height * $image['width'] / $image['height']));
 					$imagename = preg_replace('#^https?://#', '', $thumbnail);
-					$images[] = $match[1];
+					$images[] = $match[2];
                     return "<div class=\"center\"><img src=\"images/" . str_replace(
                         ' ',
                         '_',
@@ -158,8 +161,13 @@ class EpubConverter extends Converter
                 },
                 $text
             );
-        }
-
+			$firstImage = strpos($text,'<image');
+			if ($firstImage !== false && $firstImage < strpos($text,'<h'))
+			{
+				$text = "<h2>Начальные иллюстрации</h2>" . $text;
+			}
+        }		
+		
         $j         = 0;
         $notes     = '';
         $isnotes   = false;
@@ -196,7 +204,7 @@ class EpubConverter extends Converter
 		$epubText = preg_replace('@<p[^>]*>@', '<p>', $epubText);
 		
 		// delete strange tags combination which i saw once in fb2 
-		$epubText = preg_replace('@<p></p>@', '', $epubText);	
+		$epubText = preg_replace('@<p></p>@', '<br/>', $epubText);	
 
         $epub = new \PHPePub\Core\EPub();
 
@@ -275,31 +283,32 @@ class EpubConverter extends Converter
 		
 		
         $i = 0;
-                foreach ($images as $imageid) {
-					$image = $this->images[$imageid];
-                    $aspectratio = ($image['width']) / ($image['height']);
-                    if ($this->height > 0) {
-                        if ($aspectratio > 1.0) {
-                            $resizedwidth  = $this->height;
-                            $resizedheight = $this->height / $aspectratio;
-                        } else {
-                            $resizedheight = $this->height;
-                            $resizedwidth  = ($this->height) * ($aspectratio);
-                        }
+		foreach ($images as $imageid) {
+			$image = $this->images[$imageid];
+			$aspectratio = ($image['width']) / ($image['height']);
+			if ($this->height > 0) {
+				if ($aspectratio > 1.0) {
+					$resizedwidth  = $this->height;
+					$resizedheight = $this->height / $aspectratio;
+				} else {
+					$resizedheight = $this->height;
+					$resizedwidth  = ($this->height) * ($aspectratio);
+				}
 
-						$imageurl = sprintf($image['thumbnail'], $this->height);
-						$imagename = preg_replace('#^https?://#', '', $imageurl);
-                        
-                        $i = $i + 1;
+				$imageurl = sprintf($image['thumbnail'], 
+				                    min($image['width'], floor($this->height * $image['width'] / $image['height']));
+				$imagename = preg_replace('#^https?://#', '', $imageurl);
+				
+				$i = $i + 1;
 
-                        $epub->addFile(
-                            "images/" . str_replace(' ', '_', $imagename),
-                            "image-$i",
-                            file_get_contents($imageurl),
-							$image['mime_type']
-                        );
-                    }
-                }
+				$epub->addFile(
+					"images/" . str_replace(' ', '_', $imagename),
+					"image-$i",
+					file_get_contents($imageurl),
+					$image['mime_type']
+				);
+			}
+		}
 
         if ($this->isbn) {
             $epub->setIdentifier($this->isbn, 'ISBN');
@@ -312,7 +321,7 @@ class EpubConverter extends Converter
         } else {
             $epub->setTitle($this->namemain);
         }
-        $epub->setDescription("EPubConverter. Author: Keiko. Troublshooting: convert_fb2@ruranobe.ru");
+        $epub->setDescription("EPubConverter. Author: Keiko. Troubleshooting: convert_fb2@ruranobe.ru");
         $epub->setDate($this->touched);
         $epub->finalize();
 

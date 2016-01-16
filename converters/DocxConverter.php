@@ -48,20 +48,23 @@ class DocxConverter extends Converter
             }
         }
 
-        if ($this->annotation) {
-            $descr['annotation'] = $this->annotation;
-            $descr['annotation'] = trim($descr['annotation']);
-            $descr['annotation'] = "<h2>Аннотация</h2>$descr[annotation]";
-        } else {
-            $descr['annotation'] = '';
+        $descr['annotation'] = '';
+		if($this->annotation) {
+			$this->annotation = preg_replace('@\n@', '</p><p>', $this->annotation);
+			$this->annotation = preg_replace("@'''(.*?)'''@", '<b>\\1</b>', $this->annotation);
+			$this->annotation = preg_replace("@''(.*?)''@", '<i>\\1</i>', $this->annotation);
+			$this->annotation = preg_replace('@<p></p>@', '<br/>', $this->annotation);
+			$descr['annotation'] = "<h2>Аннотация</h2><p>$this->annotation</p>";
         }
 
         $images = [];
-        if ($this->cover) {
+        if ($this->covers) {
 			$innerHeight = $this->height;
-			$cover = $this->cover;
+			$cover = $this->covers[0];
 			$image = $this->images[$cover];
-			$thumbnail = sprintf($image['thumbnail'], $this->height);
+			
+			$thumbnail = sprintf($image['thumbnail'], 
+					min($image['width'], floor($this->height * $image['width'] / $image['height'])));
 		
 			$innerImageUrl = $image['url'];
 			$innerResizedWidth = $image['width'];
@@ -172,11 +175,12 @@ class DocxConverter extends Converter
         } else {
             
             $text        = preg_replace_callback(
-                '/<img[^>]*data-resource-id="(\d*)"[^>]*>/u',
+                '/(<a[^>]*>)?<img[^>]*data-resource-id="(\d*)"[^>]*>(<\/a>)?/u',
                 function ($match) use (&$images) {		
-					$image = $this->images[$match[1]];
+					$image = $this->images[$match[2]];
 					$innerHeight = $this->height;
-					$thumbnail = sprintf($image['thumbnail'], $this->height);
+					$thumbnail = sprintf($image['thumbnail'], 
+					                     min($image['width'], floor($this->height * $image['width'] / $image['height'])));
 				
 				    $innerImageUrl = $image['url'];
 					$innerResizedWidth = $image['width'];
@@ -206,6 +210,12 @@ class DocxConverter extends Converter
                 },
                 $text
             );
+			
+			 $firstImage = strpos($text,'<image');
+             if($firstImage !== false && $firstImage < strpos($text,'<h'))
+			 {
+ 				$text = "<h2>Начальные иллюстрации</h2>" . $text;
+			 }
         }
 
 		
@@ -251,14 +261,17 @@ class DocxConverter extends Converter
 		//echo '<xmp>'.$epubText;
 		//echo $footnotes[137603266];
 		//exit;
+		
+		//echo '<xmp>'.$epubText;
+		//exit;
 	
         $epubText = preg_replace('@section@', "div", $epubText);
 
         /* Delete extra <br/> tag before images */
-        $epubText = preg_replace('@<div>(.){0,20}<br/>(.){0,20}<img src@', '<div><img src', $epubText);
+        $epubText = preg_replace('@<div>(.){0,20}<br\/>(.){0,20}<img src@', '<div><img src', $epubText);
 
         /* Eliminate caret return before <h1> (Each div starts with caret return in h2d_htmlconverter.php) */
-        $epubText = preg_replace('@\s*<div>(.{0,40})(<h1>.*?</h1>)@', '\\1\\2<div>', $epubText);
+        $epubText = preg_replace('@\s*<div>(.{0,40})(<h1>.*?<\/h1>)@', '\\1\\2<div>', $epubText);
 
         /* NGNL Specific names */
         //$text=str_replace('<span style="position: relative; text-indent: 0;"><span style="display: inline-block; font-style: normal">&#12302;&#12288;&#12288;&#12288;&#12303;</span><span style="position: absolute; font-size: .7em; top: -11px; left: 50%"><span style="position: relative; left: -50%;">','&#12302;<sup>',$text);
@@ -267,24 +280,27 @@ class DocxConverter extends Converter
         // Styles of elements in which footnote is nested should not count. Thus close them
         $epubText = preg_replace('@pb@', "br", $epubText);
 		
+		//echo '<xmp>'.$epubText;
+		//exit;
+		
 		//PHPWord doesn't support tags nested in link element. Unnest images from them
-		$epubText = preg_replace('@<a[^>]*>(<img[^>]*>)</a>@', "\\1", $epubText);
+		$epubText = preg_replace('@<a[^>]*>(<img[^>]*>)<\/a>@', "\\1", $epubText);
 		
 		// Delete extra page breaks related to images.
-		$epubText = preg_replace('@<div[^>]*>(<img[^>]*>)</div>@', "\\1", $epubText);
-		$epubText = preg_replace('@<p[^>]*>(<img[^>]*>)</p>@', "\\1", $epubText);
+		$epubText = preg_replace('@<div[^>]*>(.){0,20}(<img[^>]*>)(.){0,20}<\/div>@', "\\1\\2\\3", $epubText);
+		$epubText = preg_replace('@<p[^>]*>(.){0,20}(<img[^>]*>)(.){0,20}<\/p>@', "\\1\\2\\3", $epubText);
 		
 		/* Swap h2 and img tags if img follows h2. (It gave a bad look in docx). */
-        $epubText = preg_replace('@(<h2>.{0,100}</h2>)(<img[^>]*>)@', '\\2\\1', $epubText);
+        $epubText = preg_replace('@(<h2>.{0,100}<\/h2>)(<img[^>]*>)@', '\\2\\1', $epubText);
 
         /* After swap we often needs to further lift img tag in previous <div> or <p> tag */
         $epubText = preg_replace(
-            '@</div>(<img[^>]*>)<h2@',
+            '@<\/div>(<img[^>]*>)<h2@',
             '\\1</div><h2',
             $epubText
         );	
         $epubText = preg_replace(
-            '@</p>(<img[^>]*>)<h2@',
+            '@<\/p>(<img[^>]*>)<h2@',
             '\\1</p><h2',
             $epubText
         );
