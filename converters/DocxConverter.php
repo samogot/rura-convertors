@@ -7,7 +7,6 @@ require_once(__DIR__ . '/../lib/docx/example_files/styles.inc');
 require_once(__DIR__ . '/../lib/docx/documentation/support_functions.inc');
 
 error_reporting(-1);
-ini_set('display_errors', 1);
 
 /**
  * Author: Keiko

@@ -232,7 +232,6 @@ class EpubConverter extends Converter
 		$epubText = preg_replace('@<p></p>@', '<br/>', $epubText);	
 
 		$epub = new \PHPePub\Core\EPub(\PHPePub\Core\EPub::BOOK_VERSION_EPUB3, 'ru');
-        //$epub = new \PHPePub\Core\EPub();
 
         $epub->setLanguage("ru");
 

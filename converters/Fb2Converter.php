@@ -36,6 +36,7 @@ class Fb2Converter extends Converter
                 }
             }
         }
+        $descr['annotation']='';
         if($this->annotation) {
 			$this->annotation = preg_replace('@\n@', '</p><p>', $this->annotation);
 			$this->annotation = preg_replace("@'''(.*?)'''@", '<strong>\\1</strong>', $this->annotation);
@@ -47,11 +48,9 @@ class Fb2Converter extends Converter
         if ($this->covers) {
             $cover                = $this->covers[0];
 			$image                = $this->images[$cover];
-			// $thumbnail            = sprintf($image['thumbnail'], $this->height);
 			$title                = $image['title'];
             $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $title) . "\"/></coverpage>";
             $images[]             = $cover;
-            // $descr['coverpage_n'] = $cover;
         }
         $descr['translator'] = "";
         if ($this->translators) {
@@ -64,6 +63,7 @@ class Fb2Converter extends Converter
         }
         $descr['date2'] = '<date value=' . date('"Y-m-d">j F Y, H:i', strtotime($this->touched)) . '</date>';
         $descr['id'] = 'RuRa_' . str_replace('/', '_', $this->nameurl);
+        $descr['src_url'] = 'https://ruranobe.ru/r/' . $this->nameurl;
         $descr['isbn'] = "";
         if ($this->isbn) {
             $descr['isbn'] = "<publish-info><isbn>{$this->isbn}</isbn></publish-info>";
@@ -178,81 +178,103 @@ class Fb2Converter extends Converter
         if ($images) {
             foreach ($images as $imageid) {
 				$image = $this->images[$imageid];
-				$thumbnail = sprintf($image['thumbnail'], 
-					min($image['width'], floor($this->height * $image['width'] / $image['height'])));
-                $fileContents = file_get_contents($thumbnail);
-                if ($fileContents) {
+				$convertWidth = floor($this->height * $image['width'] / $image['height']);
+				$thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
+                //$fileContents = file_get_contents($thumbnail);
+                //if ($fileContents) {
 					$title = $image['title'];
                     $binary .= '<binary id="' . $title . '" content-type="' . $image['mime_type'] . '">' . "\n" . base64_encode(
                             $fileContents
                         ) . "\n</binary>";
-                }
+                //}
             }
         }
-		
-		
-		// replace invalid for fb2 format h1-h4 headers with title
-		$text = preg_replace('@<h1[^>]*>([^<]*)<\/h1@', '<title><p>\\1</p></title', $text);
-		$text = preg_replace('@<h2[^>]*>([^<]*)<\/h2@', '<title><p>\\1</p></title', $text);
-		$text = preg_replace('@<h3[^>]*>([^<]*)<\/h3@', '<title><p>\\1</p></title', $text);
-		$text = preg_replace('@<h4[^>]*>([^<]*)<\/h4@', '<title><p>\\1</p></title', $text);
-		
-		// delete unnecessary paragraph tag
-		$text = preg_replace('@<p[^>]*><title>.*?</title></p>@', '', $text);
-		
-		// insert sections
-		$text = preg_replace('@<title>@', '</section><section><title>', $text);
-		
-		// delete first </section> tag which doesn't have a matching <section> tag because of the previous step
-		$text = preg_replace('@</section><section><title>@', '<section><title>', $text, 1);
-		
-		// insert closing section tag at the end
-		$text .= "</section>";
 
-		// where is heading levels - nestsd sections?
-		// where is subtitle tag?
-		// need to escape extra < > ang & symbols
-		
 		// delete p tag attributes such as data-chapter-id and so on.
 		$text = preg_replace('@<p[^>]*>@', '<p>', $text);
 		
 		// delete strange tags combination which i saw once in fb2 
-		$text = preg_replace('@<p></p>@', '<empty-line/>', $text);		
-		
-		// xml tags in attributes are not supported. Delete xml tags from data-content attribute
-		//$text = preg_replace('@(data-content[^\"]*\"[^\"]*)<[^>]*>([^\<]*)<\/[^>]*>([^\"]*\")@', '\\1\\2\\3', $text);	
-		
+		$text = preg_replace('@<p></p>@', '<empty-line/>', $text);	
+
+        // delete p tag around headers and atributes
+		$text = preg_replace('@(<p>\s*)?(<(h[2-4])[^>]*>(.*?)</\3>)(\s*</p>)?@', '<\\3>\\4</\\3>', $text);
+
 		// delete data-content attribute
 		$text = preg_replace('@data-content.*?class="[^>]*@', '', $text);	
 		//$text = preg_replace('@(data-content[^\"]*\"[^\"]*\")@', '', $text);	
 		
-		// replace <i>text</i> with <emphasis>text</emphasis> and <b>text</b> with <strong>text</strong>
-		$text = preg_replace('@<i>(.*?)<\/i>@', '<emphasis>\\1</emphasis>', $text);	
-		$text = preg_replace('@<b>(.*?)<\/b>@', '<strong>\\1</strong>', $text);	
+		// add subtitles
+        $text = preg_replace('@<div class=\"center subtitle\">(.*?)<\/div>@u', '<subtitle>\\1</subtitle>', $text); 
+		$text = preg_replace('@<p>\s*<subtitle>(.*?)</subtitle>\s*<\/p>@u', '<subtitle>\\1</subtitle>', $text); 
 		
 		// delete unsupported div tags
 		$text = preg_replace('@<div[^>]*>(.*?)<\/div>@u', '\\1', $text);	
 		
 		// delete unsupported span tags
 		$text = preg_replace('@<span[^>]*>(.*?)<\/span>@u', '\\1', $text);	
+
+        // delete p tag around images
+		$text = preg_replace('@(<p>\s*)?(<image[^>]*>)(\s*</p>)?@', '\\2', $text);
 		
 		// delete unsupported img tags
 		$text = preg_replace('@<img [^>]*>(.*?)<\/img>@u', '\\1', $text);	
 		$text = preg_replace('@<img.*?\/>@u', '', $text);	
 		
-		// change href to l:href and delete unsupported a attributes
-		$text = preg_replace('@<a(.*?)(href=\"[^\"]*\")(.*?)>@', '<a l:\\2>', $text);	
+		// find all headings
+		preg_match_all('@(<h([2-4])>.*?</h\2>)(.{50})@ms', $text, $m);
+		for($i=1; $i<count($m[0]); $i++) {
+			$d = $m[2][$i] - $m[2][$i-1]; // diff between cur and prev heading levels
+			if($d > 0) // if cur is nested - add open sections
+				for($j = 0; $j < $d; $j++) 
+					$text=str_replace($m[0][$i-1], $m[1][$i-1] . "\n<section>" . $m[3][$i-1], $text);
+			elseif($d < 0) // if pref is nested - add close sections
+				for($j = 0; $j < -$d; $j++) 
+					$text=str_replace($m[0][$i], "</section>\n" . $m[0][$i] , $text);
+		}
+
+		//replace headings to section brake + title
+		$text=preg_replace('@<h([2-4])>(.*?)</h\1>@',"</section>\n<section>\n<title><p>\\2</p></title>",$text);
+
+		// add first open section tag
+		$text="<section>\n<empty-line/>\n" . trim($text);
+
+		// add last close section tags according to last heading level
+		if(count($m[2])>0)
+			for($i = 0; $i < $m[2][count($m[2]) - 1] - 1; $i++)
+				$text.="\n</section>";
+
+		// even if no headings - add only section closing tag
+		if(count($m[2])<1)	$text.="\n</section>";
+
+		// delete explicit empty-line before all except paragraph 
+		$text=preg_replace('@<empty-line/>(?!\s*<p>)\n*@','',$text);
+
+		// get images out from sections
+		$text=preg_replace('@(<title>.*?</title>)\s*(<section>)\s*(<image .*?/>)@',"\\1\n\\3\n\\2",$text);
+
+		// delete explicit empty-line after all except paragraph 
+		$text=preg_replace('@(?<!</p>)<empty-line/>\n*@','',$text);
+
+		// delete empty sections 
+		$text=preg_replace('@<section>\s*(<empty-line/>)?\s*</section>\n*@','',$text);
+
+		// no empty-with-title sections allowed. add emptyline
+		$text=preg_replace('@</title>\s*</section>@',"</title>\n<empty-line/>\n</section>",$text);
+
+		// add empty lines
+		$text = preg_replace('@</p>\s*<subtitle>@', "</p>\n<empty-line/>\n<subtitle>", $text);
+		$text = preg_replace('@</subtitle>\s*<p>@', "</subtitle>\n<empty-line/>\n<p>", $text);
+		$text = preg_replace('@(<image .*?/>)(?!\s</?section)@', "\\1\n<empty-line/>", $text);
+		$text = preg_replace('@</p>\s*<image@', "</p>\n<empty-line/>\n<image", $text);
 		
 		// replace <i>text</i> with <emphasis>text</emphasis> and <b>text</b> with <strong>text</strong>
-		$notes = preg_replace('@<i>(.*?)<\/i>@', '<emphasis>\\1</emphasis>', $notes);	
-		$notes = preg_replace('@<b>(.*?)<\/b>@', '<strong>\\1</strong>', $notes);	
+		$text = preg_replace('@<i>(.*?)<\/i>@', '<emphasis>\\1</emphasis>', $text);	
+		$text = preg_replace('@<b>(.*?)<\/b>@', '<strong>\\1</strong>', $text);	
 		
 		// change href to l:href and delete unsupported a attributes
-		$notes = preg_replace('@<a(.*?)(href=\"[^\"]*\")(.*?)>@', '<a l:\\2>', $notes);	
+		$text = preg_replace('@<a(.*?)(href=\"[^\"]*\")(.*?)>@', '<a l:\\2>', $text);
 		
-		
-		
-//        $text = trim($text);
+        $text = trim($text);
         $fb2 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 	<FictionBook xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\" xmlns:l=\"http://www.w3.org/1999/xlink\">
 		<description>

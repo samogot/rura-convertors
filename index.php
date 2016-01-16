@@ -97,7 +97,7 @@ $app->get(
             ['release_activity_id', 'activity_id', 'activity_name', 'team_name', 'nickname', 'team_hidden'],
             ['volume_id' => $volume['volume_id']]
         );
-        $teams       = [];
+        $teams       = []; 
         $translators = [];
         $workers     = [];
         foreach ($activities as $activity) {
@@ -122,6 +122,7 @@ $app->get(
             ],
             [
                 'title',
+                'nested',
                 'text_html',
                 'footnotes'
             ],
@@ -134,7 +135,9 @@ $app->get(
         $footnotes = '';
 
         for ($i = 0; $i < sizeof($texts); $i++) {
-            $text .= "<h2>" . $texts[$i]['title'] . "</h2>";
+            $heading = $texts[$i]['nested'] ? 'h3' : 'h2';
+            if($texts[$i]['title'] != 'Начальные иллюстрации')
+                $text .= "<$heading>" . $texts[$i]['title'] . "</$heading>";
             $text .= $texts[$i]['text_html'];
             $footnotes .= $texts[$i]['footnotes'];
             if ($i < sizeof($texts) - 1) {
@@ -229,33 +232,31 @@ $app->get(
                 return $response->withStatus(404, 'Unknown format');
         }
 
-//        if (!empty($_SERVER['HTTP_REFERER'])) {
-//            if (strrpos($_SERVER['HTTP_REFERER'], "ranobeclub")) {
-//                header('Location: ' . "http://ruranobe.ru/r/" . array_shift(explode('/', $page)));
-//                exit;
-//            }
-//            if (!strrpos($_SERVER['HTTP_REFERER'], "ruranobe.ru") &&
-//                !strrpos($_SERVER['HTTP_REFERER'], "vk.com") &&
-//                !strrpos($_SERVER['HTTP_REFERER'], "paveliarch.gnudip.de")
-//            ) {
-//                header('Location: ' . "http://ruranobe.ru/r/" . $page);
-//                exit;
-//            }
-//        }
-//        if ($request->getcookie('cid')) {
-//            $cid = ($request->getcookie('cid'));
-//        } else {
-//            $cid = $this->uuid();
-//            setcookie('cid', $cid);
-//        }
-//        $cid = urlencode($cid);
-//        $ga = "http://www.google-analytics.com/collect?v=1&tid={$this->config['ga_tid']}&cid={$cid}&uip=" . urlencode($request->getIP()) . "&ua=" . urlencode($_SERVER['HTTP_USER_AGENT']);
-//        if (isset($_SERVER['HTTP_REFERER']))
-//            $ga .= "&dr=" . urlencode($_SERVER['HTTP_REFERER']);
-//        if ($wgUser->getId())
-//            $ga .= '&uid=' . $wgUser->getId();
-//        file_get_contents($ga . "&t=pageview&dh=ruranobe.ru&dp=" . urlencode("/d/$format/$page"));
-//        file_get_contents($ga . "&t=event&ec=download&ea=$format&el=" . urlencode($page));
+       // if (!empty($request->getReferrer())) {
+       //     if (strrpos($request->getReferrer(), "ranobeclub")) {
+       //         return $response->withRedirect("/r/" . array_shift(explode('/', $page)));
+       //     }
+       //     if (!strrpos($request->getReferrer(), "ruranobe.ru") &&
+       //         !strrpos($request->getReferrer(), "vk.com") &&
+       //         !strrpos($request->getReferrer(), "paveliarch.gnudip.de")
+       //     ) {
+       //         return $response->withRedirect("/r/" . $page);
+       //     }
+       // }
+       // if ($request->getcookie('cid')) {
+       //     $cid = ($request->getCookie('cid'));
+       // } else {
+       //     $cid = $this->uuid();
+       //     $this->setCookie('cid', $cid);
+       // }
+       // $cid = urlencode($cid);
+       // $ga = "http://www.google-analytics.com/collect?v=1&tid={$this->config['ga_tid']}&cid={$cid}&uip=" . urlencode($request->getIP()) . "&ua=" . urlencode($_SERVER['HTTP_USER_AGENT']);
+       // if ($request->getReferrer())
+       //     $ga .= "&dr=" . urlencode($request->getReferrer());
+       // if ($wgUser->getId())
+       //     $ga .= '&uid=' . $wgUser->getId();
+       // file_get_contents($ga . "&t=pageview&dh=ruranobe.ru&dp=" . urlencode("/d/$format/$page"));
+       // file_get_contents($ga . "&t=event&ec=download&ea=$format&el=" . urlencode($page));
 
         return $converter->convert($response);
         //return $response->withJson($pdb);
