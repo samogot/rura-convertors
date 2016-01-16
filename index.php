@@ -55,6 +55,9 @@ $app->get(
                 'volume_id',
                 'project_id',
                 'image_one',
+                'image_two',
+                'image_three',
+                'image_four',
                 'name_file',
                 'name_title',
                 'name_jp',
@@ -74,7 +77,6 @@ $app->get(
         }
 
         $project     = $db->get('projects', ['title'], ['project_id' => $volume['project_id']]);
-        $cover       = $db->get('external_resources', 'url', ['resource_id' => [$volume['image_one']]]);
         $touched     = $db->max(
             'texts_history',
             [
@@ -142,7 +144,23 @@ $app->get(
 
         preg_match_all('/data-resource-id="(\d+)"/', $text, $matches);
         unset($matches[0]);
-
+        $covers = [];
+        if($volume['image_one']){
+            $matches[1][] = $volume['image_one'];
+            $covers[] = $volume['image_one'];
+        }
+        if($volume['image_two']){
+            $matches[1][] = $volume['image_two'];
+            $covers[] = $volume['image_two'];
+        }
+        if($volume['image_three']){
+            $matches[1][] = $volume['image_three'];
+            $covers[] = $volume['image_three'];
+        }
+        if($volume['image_four']){
+            $matches[1][] = $volume['image_four'];
+            $covers[] = $volume['image_four'];
+        }
         if ($matches[1]) {
             $images_temp =
                 $db->select(
@@ -182,7 +200,7 @@ $app->get(
             'author'       => $volume['author'],
             'name_ru'      => $volume['name_ru'],
             'illustrator'  => $volume['illustrator'],
-            'cover'        => $cover,
+            'covers'       => $covers,
             'translators'  => $translators,
             'series_title' => $project['title'],
             'series_num'   => $volume['sequence_number'],

@@ -15,7 +15,7 @@ abstract class Converter
     protected $author;
     protected $nameru;
     protected $illustrator;
-    protected $cover;
+    protected $covers;
     protected $translators;
     protected $seriestitle;
     protected $seriesnum;
@@ -82,7 +82,7 @@ abstract class Converter
                 $h = '_' . $this->height;
         }
         $part_filename  = '/' . $this->nameurl . '/' . str_replace(' ', '_', $this->namemain) . $h . $this->getExt();
-        $cache_filename = 'ConvertorsCacheBeta' . $part_filename;
+        $cache_filename = $this->config['folder'] . $part_filename;
         $json = $this->apiCall('disk/resources', ['fields' => 'modified', 'path' => $cache_filename]);
         $bin = false;
         if (!isset($json->modified) || strtotime($this->touched) > strtotime($json->modified)) {
@@ -120,9 +120,9 @@ abstract class Converter
         if (isset($json->href)) {
             return $response->withRedirect($json->href);
         } else {
-        if (!$bin) {
-            $bin = $this->convertImpl($this->text_to_convert);
-        }
+            if (!$bin) {
+                $bin = $this->convertImpl($this->text_to_convert);
+            }
             return $this->makeDownload($bin, $response);
         }
     }
@@ -171,7 +171,7 @@ abstract class Converter
         $this->author      = $pdb['author'];
         $this->nameru      = $pdb['name_ru'];
         $this->illustrator = $pdb['illustrator'];
-        $this->cover       = $pdb['cover'];
+        $this->covers      = $pdb['covers'];
         $this->translators = $pdb['translators'];
         $this->seriestitle = $pdb['series_title'];
         $this->seriesnum   = $pdb['series_num'];

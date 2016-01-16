@@ -17,9 +17,9 @@ class Fb2Converter extends Converter
     protected function convertImpl($text)
     {
         $descr['book_title'] = $this->nameru;
+        $descr['author'] = "";
         foreach ([$this->author, $this->illustrator] as $aut) {
             if ($aut) {
-                $descr['author'] = "";
                 foreach (explode(',', $aut) as $au) {
                     $a = explode(' ', trim($au));
                     $descr['author'] .= "<author>";
@@ -36,16 +36,22 @@ class Fb2Converter extends Converter
                 }
             }
         }
-        $descr['annotation'] = '<annotation><p>' . $this->annotation . '</p></annotation>';
+        if($this->annotation) {
+			$this->annotation = preg_replace('@\n@', '</p><p>', $this->annotation);
+			$this->annotation = preg_replace("@'''(.*?)'''@", '<strong>\\1</strong>', $this->annotation);
+			$this->annotation = preg_replace("@''(.*?)''@", '<emphasis>\\1</emphasis>', $this->annotation);
+			$this->annotation = preg_replace('@<p></p>@', '<empty-line/>', $this->annotation);		
+        	$descr['annotation'] = '<annotation><p>' . $this->annotation . '</p></annotation>';
+        }
         $images = [];
-        if ($this->cover) {
-            $cover                = $this->cover;
+        if ($this->covers) {
+            $cover                = $this->covers[0];
 			$image                = $this->images[$cover];
-			//$thumbnail            = sprintf($image['thumbnail'], $this->height);
+			// $thumbnail            = sprintf($image['thumbnail'], $this->height);
 			$title                = $image['title'];
             $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $title) . "\"/></coverpage>";
             $images[]             = $cover;
-            $descr['coverpage_n'] = $cover;
+            // $descr['coverpage_n'] = $cover;
         }
         $descr['translator'] = "";
         if ($this->translators) {
@@ -70,33 +76,32 @@ class Fb2Converter extends Converter
                 $credit .= '<p>' . $activity . ': <strong>' . implode('</strong>, <strong>', $workers) . "</strong></p>\n";
             }
             $credit .= '<p>Самый свежий перевод всегда можно найти на сайте нашего проекта:</p>
-                    <p><a l:href="http://ruranobe.ru">http://ruranobe.ru</a></p>
-                    <p>Чтобы оставаться в курсе всех новостей, вступайте в нашу группу в Контакте:</p>
-                    <p><a l:href="http://vk.com/ru.ranobe">http://vk.com/ru.ranobe</a></p>
-                    <empty-line/>
-                    <p>Для желающих отблагодарить переводчика материально имеются webmoney-кошельки команды:</p>
-                    <p><strong>R125820793397</strong></p>
-                    <p><strong>U911921912420</strong></p>
-                    <p><strong>Z608138208963</strong></p>
-                    <p>QIWI-кошелек:</p>
-                    <p><strong>+79116857099</strong></p>
-                    <p>Яндекс-деньги:</p>
-                    <p><strong>410012692832515</strong></p>
+					<p><a l:href="http://ruranobe.ru">http://ruranobe.ru</a></p>
+					<p>Чтобы оставаться в курсе всех новостей, вступайте в нашу группу в Контакте:</p>
+					<p><a l:href="http://vk.com/ru.ranobe">http://vk.com/ru.ranobe</a></p>
+					<empty-line/>
+					<p>Для желающих отблагодарить переводчика материально имеются webmoney-кошельки команды:</p>
+					<p><strong>R125820793397</strong></p>
+					<p><strong>U911921912420</strong></p>
+					<p><strong>Z608138208963</strong></p>
+					<p>QIWI-кошелек:</p>
+					<p><strong>+79116857099</strong></p>
+					<p>Яндекс-деньги:</p>
+					<p><strong>410012692832515</strong></p>
                     <p>PayPal:</p>
                     <p><strong>paypal@ruranobe.ru</strong></p>
-                    <p>А так же счет для перевода с кредитных карт:</p>
-                    <p><strong>4890 4941 5384 9302</strong></p>
-                    <empty-line/>
-                    <p>Версия от ' . date('d.m.Y', strtotime($this->touched)) . '</p>
-                    <empty-line/>
-                    <empty-line/>
-                    <empty-line/>
-                    <p><strong>Любое распространение перевода за пределами нашего сайта запрещено. Если вы скачали файл на другом сайте - вы поддержали воров</strong></p>
-                    <empty-line/>
-                    <empty-line/>
-                    <empty-line/>
-                    </section>';
-
+					<p>А так же счет для перевода с кредитных карт:</p>
+					<p><strong>4890 4941 5384 9302</strong></p>
+					<empty-line/>
+					<p>Версия от ' . date('d.m.Y', strtotime($this->touched)) . '</p>
+					<empty-line/>
+					<empty-line/>
+					<empty-line/>
+					<p><strong>Любое распространение перевода за пределами нашего сайта запрещено. Если вы скачали файл на другом сайте - вы поддержали воров</strong></p>
+					<empty-line/>
+					<empty-line/>
+					<empty-line/>
+					</section>';
         } elseif (strpos($this->command, 'RuRa-team') !== false) {
             $credit = "<section>
 					<title><p>Реквизиты переводчиков</p></title>
@@ -129,19 +134,25 @@ class Fb2Converter extends Converter
         if ($this->height == 0) {
             $text = preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u', '', $text);
         } else {
+        	for ($i = 1; $i < count($this->covers); ++$i) {
+				$image = $this->images[$this->covers[$i]];
+				$images[] = $this->covers[$i];
+				$title = $image['title'];
+				$text = "<image l:href=\"#" . str_replace(' ', '_', $title) . "\"/>" . $text;
+        	}
             $text = preg_replace_callback(
-                '/<img[^>]*data-resource-id="(\d*)"[^>]*>/u',
+                '/(<a[^>]*>)?<img[^>]*data-resource-id="(\d*)"[^>]*>(<\/a>)?/u',
                 function ($match) use (&$images) {
-					$image = $this->images[$match[1]];
-					/*$thumbnail = sprintf($image['thumbnail'], $this->height);
-					
-					strrpos($thumbnail, '/')*/
-					$images[] = $match[1];
+					$image = $this->images[$match[2]];
+					$images[] = $match[2];
 					$title = $image['title'];
                     return "<image l:href=\"#" . str_replace(' ', '_', $title) . "\"/>";
                 },
                 $text
             );
+            $firstImage = strpos($text,'<image');
+            if($firstImage !== false && $firstImage < strpos($text,'<h'))
+				$text = "<h2>Начальные иллюстрации</h2>" . $text;
         }
         $j         = 0;
         $notes     = '';
@@ -167,9 +178,10 @@ class Fb2Converter extends Converter
         if ($images) {
             foreach ($images as $imageid) {
 				$image = $this->images[$imageid];
-				$thumbnail = sprintf($image['thumbnail'], $this->height);
-                if (file_get_contents($thumbnail, 0, null, 0, 1)) {
-                    $fileContents = file_get_contents($thumbnail);
+				$thumbnail = sprintf($image['thumbnail'], 
+					min($image['width'], floor($this->height * $image['width'] / $image['height'])));
+                $fileContents = file_get_contents($thumbnail);
+                if ($fileContents) {
 					$title = $image['title'];
                     $binary .= '<binary id="' . $title . '" content-type="' . $image['mime_type'] . '">' . "\n" . base64_encode(
                             $fileContents
@@ -196,12 +208,16 @@ class Fb2Converter extends Converter
 		
 		// insert closing section tag at the end
 		$text .= "</section>";
+
+		// where is heading levels - nestsd sections?
+		// where is subtitle tag?
+		// need to escape extra < > ang & symbols
 		
 		// delete p tag attributes such as data-chapter-id and so on.
 		$text = preg_replace('@<p[^>]*>@', '<p>', $text);
 		
 		// delete strange tags combination which i saw once in fb2 
-		$text = preg_replace('@<p></p>@', '', $text);		
+		$text = preg_replace('@<p></p>@', '<empty-line/>', $text);		
 		
 		// xml tags in attributes are not supported. Delete xml tags from data-content attribute
 		//$text = preg_replace('@(data-content[^\"]*\"[^\"]*)<[^>]*>([^\<]*)<\/[^>]*>([^\"]*\")@', '\\1\\2\\3', $text);	
