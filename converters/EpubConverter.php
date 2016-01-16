@@ -58,7 +58,7 @@ class EpubConverter extends Converter
 			$cover = $this->covers[0];
 			$image = $this->images[$cover];
 			$thumbnail = sprintf($image['thumbnail'],
-			                     min($image['width'], floor($this->height * $image['width'] / $image['height']));
+			                     min($image['width'], floor($this->height * $image['width'] / $image['height'])));
 			$imagename = preg_replace('#^https?://#', '', $thumbnail);
 			$descr['coverpage'] = "<div class=\"center\"><img src=\"images/" . str_replace(
                         ' ',
@@ -149,7 +149,7 @@ class EpubConverter extends Converter
                 function ($match) use (&$images) {
                     $image = $this->images[$match[2]];
 					$thumbnail = sprintf($image['thumbnail'], 
-					                     min($image['width'], floor($this->height * $image['width'] / $image['height']));
+					                     min($image['width'], floor($this->height * $image['width'] / $image['height'])));
 					$imagename = preg_replace('#^https?://#', '', $thumbnail);
 					$images[] = $match[2];
                     return "<div class=\"center\"><img src=\"images/" . str_replace(
@@ -168,29 +168,54 @@ class EpubConverter extends Converter
 			}
         }		
 		
-        $j         = 0;
-        $notes     = '';
+        $j = 0;
+        $notes = "<h2>Примечания</h2>\n\t\n";
         $isnotes   = false;
         $footnotes = explode(',;,', $this->footnotes);
-        for ($i = 0; $i < sizeof($footnotes); $i++) {
+		
+		for ($i = 0; $i < sizeof($footnotes); $i++) {			
             if (is_numeric($footnotes[$i])) {
-                $j = 0;
-                if ($isnotes == false) {
-                    $notes .= "<body name=\"notes\">\n\t<title><p>Примечания</p></title>\n";
-                }
                 $isnotes = true;
-                $notes .= "\t<section id=\"cite_note-$footnotes[$i]\">\n\t\t<title><p>$j</p></title>\n\t\t<p>" . $footnotes[$i + 1] . "</p>\n\t</section>\n";
+				$text = str_replace('<a href="#cite_note-'.$footnotes[$i].'">*</a>', 
+				                    '<a epub:type="noteref"  href="notes.xhtml#note'.$j.'" class="reference" id="ref'.$j.'">['.$j.']</a>', $text);
+                $notes .= "\t<div class=\"notes\"><aside epub:type=\"rearnote\" class=\"note\" id=\"note$j\">$j. " . $footnotes[$i + 1] . "</aside></div>\n";
                 $i++;
                 $j++;
             }
         }
         if ($isnotes == true) {
-            $notes .= '</body>';
         }
+		else {
+			$notes = '';
+		}
 
         $text     = trim($text);
         $epubText = "$descr[annotation]$credit$text$notes";
 
+		$epubText = preg_replace('@section@', "div", $epubText);
+
+        /* Delete extra <br/> tag before images */
+        $epubText = preg_replace('@<div>(.){0,20}<br\/>(.){0,20}<img src@', '<div><img src', $epubText);
+
+        // Delete extra page breaks related to images.
+		$epubText = preg_replace('@<div[^>]*>(.){0,20}(<img[^>]*>)(.){0,20}<\/div>@', "\\1\\2\\3", $epubText);
+		$epubText = preg_replace('@<p[^>]*>(.){0,20}(<img[^>]*>)(.){0,20}<\/p>@', "\\1\\2\\3", $epubText);
+		
+		/* Swap h2 and img tags if img follows h2. (It gave a bad look in docx). */
+        $epubText = preg_replace('@(<h2>.{0,100}<\/h2>)(<img[^>]*>)@', '\\2\\1', $epubText);
+
+        /* After swap we often needs to further lift img tag in previous <div> or <p> tag */
+        $epubText = preg_replace(
+            '@<\/div>(<img[^>]*>)<h2@',
+            '\\1</div><h2',
+            $epubText
+        );	
+        $epubText = preg_replace(
+            '@<\/p>(<img[^>]*>)<h2@',
+            '\\1</p><h2',
+            $epubText
+        );
+		
         /*
            ---------------------------------------------------------------------------------------------------
            Common part (Some pieces like images were docx specific though) with DOCX Ended. Epub specific part
@@ -206,7 +231,8 @@ class EpubConverter extends Converter
 		// delete strange tags combination which i saw once in fb2 
 		$epubText = preg_replace('@<p></p>@', '<br/>', $epubText);	
 
-        $epub = new \PHPePub\Core\EPub();
+		$epub = new \PHPePub\Core\EPub(\PHPePub\Core\EPub::BOOK_VERSION_EPUB3, 'ru');
+        //$epub = new \PHPePub\Core\EPub();
 
         $epub->setLanguage("ru");
 
@@ -296,7 +322,7 @@ class EpubConverter extends Converter
 				}
 
 				$imageurl = sprintf($image['thumbnail'], 
-				                    min($image['width'], floor($this->height * $image['width'] / $image['height']));
+				                    min($image['width'], floor($this->height * $image['width'] / $image['height'])));
 				$imagename = preg_replace('#^https?://#', '', $imageurl);
 				
 				$i = $i + 1;
