@@ -132,7 +132,8 @@ class Fb2Converter extends Converter
 					</section>';
         }
         if ($this->height == 0) {
-            $text = preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u', '', $text);
+            $text = preg_replace('/(<p[^>]*>)?(<a[^>]*>)?<img[^>]*>(<\/a>)?(<\/p>)?/u', '', $text);
+            $this->height = 1080;
         } else {
         	for ($i = 1; $i < count($this->covers); ++$i) {
 				$image = $this->images[$this->covers[$i]];
@@ -180,13 +181,13 @@ class Fb2Converter extends Converter
 				$image = $this->images[$imageid];
 				$convertWidth = floor($this->height * $image['width'] / $image['height']);
 				$thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
-                //$fileContents = file_get_contents($thumbnail);
-                //if ($fileContents) {
+                $fileContents = file_get_contents($thumbnail);
+                if ($fileContents) {
 					$title = $image['title'];
                     $binary .= '<binary id="' . $title . '" content-type="' . $image['mime_type'] . '">' . "\n" . base64_encode(
                             $fileContents
                         ) . "\n</binary>";
-                //}
+                }
             }
         }
 

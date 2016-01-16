@@ -62,34 +62,35 @@ class DocxConverter extends Converter
 			$cover = $this->covers[0];
 			$image = $this->images[$cover];
 			
-			$thumbnail = sprintf($image['thumbnail'], 
-					min($image['width'], floor($this->height * $image['width'] / $image['height'])));
+			$convertWidth = min($image['width'], floor($this->height * $image['width'] / $image['height']));
+			$convertHeight = min($image['height'], $this->height);
+			$thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
 		
-			$innerImageUrl = $image['url'];
-			$innerResizedWidth = $image['width'];
-			$innerResizedHeight = $image['height'];
+			// $innerImageUrl = $image['url'];
+			// $innerResizedWidth = $image['width'];
+			// $innerResizedHeight = $image['height'];
 		
-			if (file_get_contents($thumbnail, 0, null, 0, 1)) {
-				$innerAspectRatio = $image['width'] / $image['height'];
-				if ($innerHeight > 0) {
-					if ($innerAspectRatio > 1.0) {
-						$innerResizedWidth  = $innerHeight;
-						$innerResizedHeight = $innerHeight / $innerAspectRatio;
-					} else {
-						$innerResizedHeight = $innerHeight;
-						$innerResizedWidth  = $innerHeight * $innerAspectRatio;
-					}
-				}
+			// if (file_get_contents($thumbnail, 0, null, 0, 1)) {
+			// 	$innerAspectRatio = $image['width'] / $image['height'];
+			// 	if ($innerHeight > 0) {
+			// 		if ($innerAspectRatio > 1.0) {
+			// 			$innerResizedWidth  = $innerHeight;
+			// 			$innerResizedHeight = $innerHeight / $innerAspectRatio;
+			// 		} else {
+			// 			$innerResizedHeight = $innerHeight;
+			// 			$innerResizedWidth  = $innerHeight * $innerAspectRatio;
+			// 		}
+			// 	}
 				
-				if (!$innerAspectRatio) {
-					return "";
-				}
+			// 	if (!$innerAspectRatio) {
+			// 		return "";
+			// 	}
 
-				$innerImageUrl = sprintf($image['thumbnail'], $innerResizedWidth);						
-			}
+			// 	$innerImageUrl = sprintf($image['thumbnail'], $innerResizedWidth);						
+			// }
 
 			/* Width and height are unimportant. Actual resizing is done not in this class. We must save aspect ratio though. */
-			$descr['coverpage']  = "<img src=\"" . $innerImageUrl . "\" width=\"" . $innerResizedWidth . "\" height=\"" . $innerResizedHeight . "\" />";
+			$descr['coverpage']  = "<img src=\"" . $thumbnail . "\" width=\"" . $convertWidth . "\" height=\"" . $convertHeight . "\" />";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
         }
@@ -178,34 +179,36 @@ class DocxConverter extends Converter
                 function ($match) use (&$images) {		
 					$image = $this->images[$match[2]];
 					$innerHeight = $this->height;
-					$thumbnail = sprintf($image['thumbnail'], 
-					                     min($image['width'], floor($this->height * $image['width'] / $image['height'])));
+					
+					$convertWidth = min($image['width'], floor($this->height * $image['width'] / $image['height']));
+					$convertHeight = min($image['height'], $this->height);
+					$thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
+		
+				 //    $innerImageUrl = $image['url'];
+					// $innerResizedWidth = $image['width'];
+					// $innerResizedHeight = $image['height'];
 				
-				    $innerImageUrl = $image['url'];
-					$innerResizedWidth = $image['width'];
-					$innerResizedHeight = $image['height'];
-				
-                    if (file_get_contents($thumbnail, 0, null, 0, 1)) {
-                        $innerAspectRatio = $image['width'] / $image['height'];
-                        if ($innerHeight > 0) {
-                            if ($innerAspectRatio > 1.0) {
-                                $innerResizedWidth  = $innerHeight;
-                                $innerResizedHeight = $innerHeight / $innerAspectRatio;
-                            } else {
-                                $innerResizedHeight = $innerHeight;
-                                $innerResizedWidth  = $innerHeight * $innerAspectRatio;
-                            }
-                        }
+     //                if (file_get_contents($thumbnail, 0, null, 0, 1)) {
+     //                    $innerAspectRatio = $image['width'] / $image['height'];
+     //                    if ($innerHeight > 0) {
+     //                        if ($innerAspectRatio > 1.0) {
+     //                            $innerResizedWidth  = $innerHeight;
+     //                            $innerResizedHeight = $innerHeight / $innerAspectRatio;
+     //                        } else {
+     //                            $innerResizedHeight = $innerHeight;
+     //                            $innerResizedWidth  = $innerHeight * $innerAspectRatio;
+     //                        }
+     //                    }
 						
-                        if (!$innerAspectRatio) {
-                            return "";
-                        }
+     //                    if (!$innerAspectRatio) {
+     //                        return "";
+     //                    }
 
-                        $innerImageUrl = sprintf($image['thumbnail'], $innerResizedWidth);						
-                    }
+     //                    $innerImageUrl = sprintf($image['thumbnail'], $innerResizedWidth);						
+     //                }
 				
                     /* Width and height are unimportant. Actual resizing is done not in this class. We must save aspect ratio though. */
-                    return "<img src=\"" . $innerImageUrl . "\" width=\"" . $innerResizedWidth . "\" height=\"" . $innerResizedHeight . "\" />";
+                    return "<img src=\"" . $thumbnail . "\" width=\"" . $convertWidth . "\" height=\"" . $convertHeight . "\" />";
                 },
                 $text
             );
