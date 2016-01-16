@@ -97,12 +97,15 @@ $app->get(
             ['release_activity_id', 'activity_id', 'activity_name', 'team_name', 'nickname', 'team_hidden'],
             ['volume_id' => $volume['volume_id']]
         );
-        $teams       = []; 
+        $teams       = [];
         $translators = [];
         $workers     = [];
         foreach ($activities as $activity) {
             $is_translator = in_array($activity['activity_id'], [1, 2, 10, 11, 13]);
             if (!$activity['team_hidden']) {
+                if (!array_key_exists($activity['team_name'], $teams)) {
+                    $teams[$activity['team_name']] = 0;
+                }
                 $teams[$activity['team_name']] -= $is_translator;
             }
             if ($is_translator) {
@@ -136,8 +139,9 @@ $app->get(
 
         for ($i = 0; $i < sizeof($texts); $i++) {
             $heading = $texts[$i]['nested'] ? 'h3' : 'h2';
-            if($texts[$i]['title'] != 'Начальные иллюстрации')
+            if ($texts[$i]['title'] != 'Начальные иллюстрации') {
                 $text .= "<$heading>" . $texts[$i]['title'] . "</$heading>";
+            }
             $text .= $texts[$i]['text_html'];
             $footnotes .= $texts[$i]['footnotes'];
             if ($i < sizeof($texts) - 1) {
@@ -148,21 +152,21 @@ $app->get(
         preg_match_all('/data-resource-id="(\d+)"/', $text, $matches);
         unset($matches[0]);
         $covers = [];
-        if($volume['image_one']){
+        if ($volume['image_one']) {
             $matches[1][] = $volume['image_one'];
-            $covers[] = $volume['image_one'];
+            $covers[]     = $volume['image_one'];
         }
-        if($volume['image_two']){
+        if ($volume['image_two']) {
             $matches[1][] = $volume['image_two'];
-            $covers[] = $volume['image_two'];
+            $covers[]     = $volume['image_two'];
         }
-        if($volume['image_three']){
+        if ($volume['image_three']) {
             $matches[1][] = $volume['image_three'];
-            $covers[] = $volume['image_three'];
+            $covers[]     = $volume['image_three'];
         }
-        if($volume['image_four']){
+        if ($volume['image_four']) {
             $matches[1][] = $volume['image_four'];
-            $covers[] = $volume['image_four'];
+            $covers[]     = $volume['image_four'];
         }
         if ($matches[1]) {
             $images_temp =
@@ -232,31 +236,31 @@ $app->get(
                 return $response->withStatus(404, 'Unknown format');
         }
 
-       // if (!empty($request->getReferrer())) {
-       //     if (strrpos($request->getReferrer(), "ranobeclub")) {
-       //         return $response->withRedirect("/r/" . array_shift(explode('/', $page)));
-       //     }
-       //     if (!strrpos($request->getReferrer(), "ruranobe.ru") &&
-       //         !strrpos($request->getReferrer(), "vk.com") &&
-       //         !strrpos($request->getReferrer(), "paveliarch.gnudip.de")
-       //     ) {
-       //         return $response->withRedirect("/r/" . $page);
-       //     }
-       // }
-       // if ($request->getcookie('cid')) {
-       //     $cid = ($request->getCookie('cid'));
-       // } else {
-       //     $cid = $this->uuid();
-       //     $this->setCookie('cid', $cid);
-       // }
-       // $cid = urlencode($cid);
-       // $ga = "http://www.google-analytics.com/collect?v=1&tid={$this->config['ga_tid']}&cid={$cid}&uip=" . urlencode($request->getIP()) . "&ua=" . urlencode($_SERVER['HTTP_USER_AGENT']);
-       // if ($request->getReferrer())
-       //     $ga .= "&dr=" . urlencode($request->getReferrer());
-       // if ($wgUser->getId())
-       //     $ga .= '&uid=' . $wgUser->getId();
-       // file_get_contents($ga . "&t=pageview&dh=ruranobe.ru&dp=" . urlencode("/d/$format/$page"));
-       // file_get_contents($ga . "&t=event&ec=download&ea=$format&el=" . urlencode($page));
+        // if (!empty($request->getReferrer())) {
+        //     if (strrpos($request->getReferrer(), "ranobeclub")) {
+        //         return $response->withRedirect("/r/" . array_shift(explode('/', $page)));
+        //     }
+        //     if (!strrpos($request->getReferrer(), "ruranobe.ru") &&
+        //         !strrpos($request->getReferrer(), "vk.com") &&
+        //         !strrpos($request->getReferrer(), "paveliarch.gnudip.de")
+        //     ) {
+        //         return $response->withRedirect("/r/" . $page);
+        //     }
+        // }
+        // if ($request->getcookie('cid')) {
+        //     $cid = ($request->getCookie('cid'));
+        // } else {
+        //     $cid = $this->uuid();
+        //     $this->setCookie('cid', $cid);
+        // }
+        // $cid = urlencode($cid);
+        // $ga = "http://www.google-analytics.com/collect?v=1&tid={$this->config['ga_tid']}&cid={$cid}&uip=" . urlencode($request->getIP()) . "&ua=" . urlencode($_SERVER['HTTP_USER_AGENT']);
+        // if ($request->getReferrer())
+        //     $ga .= "&dr=" . urlencode($request->getReferrer());
+        // if ($wgUser->getId())
+        //     $ga .= '&uid=' . $wgUser->getId();
+        // file_get_contents($ga . "&t=pageview&dh=ruranobe.ru&dp=" . urlencode("/d/$format/$page"));
+        // file_get_contents($ga . "&t=event&ec=download&ea=$format&el=" . urlencode($page));
 
         return $converter->convert($response);
         //return $response->withJson($pdb);
