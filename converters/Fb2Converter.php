@@ -61,7 +61,7 @@ class Fb2Converter extends Converter
         if ($this->seriestitle) {
             $descr['sequence'] = "<sequence name=\"{$this->seriestitle}\"" . ($this->seriesnum ? " number=\"{$this->seriesnum}\"" : '') . " />";
         }
-        $descr['date2'] = '<date value=' . date('"Y-m-d">j F Y, H:i', strtotime($this->touched)) . '</date>';
+        $descr['date2'] = '<date value=' . date('"Y-m-d">j F Y, H:i', $this->touched) . '</date>';
         $descr['id'] = 'RuRa_' . str_replace('/', '_', $this->nameurl);
         $descr['src_url'] = 'https://ruranobe.ru/r/' . $this->nameurl;
         $descr['isbn'] = "";
@@ -93,7 +93,7 @@ class Fb2Converter extends Converter
 					<p>А так же счет для перевода с кредитных карт:</p>
 					<p><strong>4890 4941 5384 9302</strong></p>
 					<empty-line/>
-					<p>Версия от ' . date('d.m.Y', strtotime($this->touched)) . '</p>
+					<p>Версия от ' . date('d.m.Y', $this->touched) . '</p>
 					<empty-line/>
 					<empty-line/>
 					<empty-line/>
@@ -114,7 +114,7 @@ class Fb2Converter extends Converter
 					<p>Чтобы оставаться в курсе всех новостей, вступайте в нашу группу в Контакте:</p>
 					<p><a l:href="http://vk.com/ru.ranobe">http://vk.com/ru.ranobe</a></p>
 					<empty-line/>
-					<p>Версия от ' . date('d.m.Y', strtotime($this->touched)) . '</p>
+					<p>Версия от ' . date('d.m.Y', $this->touched) . '</p>
 					<empty-line/>
 					<p><strong>Любое коммерческое использование данного текста или его фрагментов запрещено</strong></p>
 					</section>';
@@ -126,7 +126,7 @@ class Fb2Converter extends Converter
             foreach ($this->workers as $activity => $workers) {
                 $credit .= '<p>' . $activity . ': <strong>' . implode('</strong>, <strong>', $workers) . "</strong></p>\n";
             }
-            $credit .= '<p>Версия от ' . date('d.m.Y', strtotime($this->touched)) . '</p>
+            $credit .= '<p>Версия от ' . date('d.m.Y', $this->touched) . '</p>
 					<empty-line/>
 					<p><strong>Любое коммерческое использование данного текста или его фрагментов запрещено</strong></p>
 					</section>';

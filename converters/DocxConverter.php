@@ -108,7 +108,7 @@ class DocxConverter extends Converter
             $descr['sequence'] = "<h1>{$this->seriestitle}" . ($this->seriesnum ? " {$this->seriesnum}" : '') . " </h1>";
         }
 
-        $descr['date2'] = date('j F Y, H:i', strtotime($this->touched));
+        $descr['date2'] = date('j F Y, H:i', $this->touched);
         $descr['id'] = 'RuRa_' . str_replace('/', '_', $this->nameurl);
 
         if ($this->isbn) {
@@ -137,7 +137,7 @@ class DocxConverter extends Converter
                           <p><b>paypal@ruranobe.ru</b></p>
 						  <p>А так же счет для перевода с кредитных карт:</p>
 						  <p><b>4890 4941 5384 9302</b></p>
-						  <p>Версия от ' . date('d.m.Y', strtotime($this->touched)) . '</p>
+						  <p>Версия от ' . date('d.m.Y', $this->touched) . '</p>
 						  <p></p>
 						  <p></p>
 						  <p></p>
@@ -155,7 +155,7 @@ class DocxConverter extends Converter
 						  <p><a l:href="http://ruranobe.ru">http://ruranobe.ru</a></p>
 						  <p>Чтобы оставаться в курсе всех новостей, вступайте в нашу группу в Контакте:</p>
 						  <p><a l:href="http://vk.com/ru.ranobe">http://vk.com/ru.ranobe</a></p>
-						  <p>Версия от ' . date('d.m.Y', strtotime($this->touched)) . '</p>
+						  <p>Версия от ' . date('d.m.Y', $this->touched) . '</p>
 						  <p><b>Любое коммерческое использование данного текста или его фрагментов запрещено</b></p>';
         } else {
             $credit = "<h2>Реквизиты переводчиков</h2>";
@@ -165,7 +165,7 @@ class DocxConverter extends Converter
             foreach ($this->workers as $activity => $workers) {
                 $credit .= '<p>' . $activity . ': <b>' . implode('</b>, <b>', $workers) . "</b></p>\n";
             }
-            $credit .= '<p>Версия от ' . date('d.m.Y', strtotime($this->touched)) . '</p>
+            $credit .= '<p>Версия от ' . date('d.m.Y', $this->touched) . '</p>
 						  <p><b>Любое коммерческое использование данного текста или его фрагментов запрещено</b></p>';
         }
 
