@@ -25,7 +25,7 @@ class EpubConverter extends Converter
     protected function convertImpl($text)
     {
         $descr['book_title'] = $this->nameru;
-		$descr['author'] = "";
+        $descr['author']     = "";
         foreach ([$this->author, $this->illustrator] as $aut) {
             if ($aut) {
                 foreach (explode(',', $aut) as $au) {
@@ -43,30 +43,33 @@ class EpubConverter extends Converter
                 }
             }
         }
-		
-		$descr['annotation'] = '';
-		if($this->annotation) {
-			$this->annotation = preg_replace('@\n@', '</p><p>', $this->annotation);
-			$this->annotation = preg_replace("@'''(.*?)'''@", '<b>\\1</b>', $this->annotation);
-			$this->annotation = preg_replace("@''(.*?)''@", '<i>\\1</i>', $this->annotation);
-			$this->annotation = preg_replace('@<p></p>@', '<br/>', $this->annotation);
-			$descr['annotation'] = "<h2>Аннотация</h2><p>$this->annotation</p>";
+
+        $descr['annotation'] = '';
+        if ($this->annotation) {
+            $this->annotation    = preg_replace('@\n@', '</p><p>', $this->annotation);
+            $this->annotation    = preg_replace("@'''(.*?)'''@", '<b>\\1</b>', $this->annotation);
+            $this->annotation    = preg_replace("@''(.*?)''@", '<i>\\1</i>', $this->annotation);
+            $this->annotation    = preg_replace('@<p></p>@', '<br/>', $this->annotation);
+            $descr['annotation'] = "<h2>Аннотация</h2><p>$this->annotation</p>";
         }
-		
+
         $images = [];
         if ($this->covers) {
-			$cover = $this->covers[0];
-			$image = $this->images[$cover];
-			$convertWidth = floor($this->height * $image['width'] / $image['height']);
-            $thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
-            $imagename = preg_replace('#^https?://#', '', $thumbnail);
-			$descr['coverpage'] = "<div class=\"center\"><img src=\"images/" . str_replace(
-                        ' ',
-                        '_',
-                        $imagename
-                    ) . "\" alt=\"" . str_replace(' ', '_', $imagename) . "\"/></div>";
-			$images[]             = $cover;
-            $descr['coverpage_n'] = $cover;			
+            $cover                = $this->covers[0];
+            $image                = $this->images[$cover];
+            $convertWidth         = floor($this->height * $image['width'] / $image['height']);
+            $thumbnail            = $convertWidth < $image['width'] ? sprintf(
+                $image['thumbnail'],
+                $convertWidth
+            ) : $image['url'];
+            $imagename            = preg_replace('#^https?://#', '', $thumbnail);
+            $descr['coverpage']   = "<div class=\"center\"><img src=\"images/" . str_replace(
+                    ' ',
+                    '_',
+                    $imagename
+                ) . "\" alt=\"" . str_replace(' ', '_', $imagename) . "\"/></div>";
+            $images[]             = $cover;
+            $descr['coverpage_n'] = $cover;
         }
 
         if ($this->translators) {
@@ -142,88 +145,91 @@ class EpubConverter extends Converter
 						  <p><b>Любое коммерческое использование данного текста или его фрагментов запрещено</b></p>';
         }
         if ($this->height == 0) {
-            $text = preg_replace('/(<p[^>]*>)?(<a[^>]*>)?<img[^>]*>(<\/a>)?(<\/p>)?/u', '', $text);
+            $text = preg_replace('@(<p[^>]*>)?(<a[^>]*>)?<img[^>]*>(</a>)?(</p>)?@u', '', $text);
         } else {
             for ($i = 1; $i < count($this->covers); ++$i) {
-                $image = $this->images[$this->covers[$i]];
+                $image        = $this->images[$this->covers[$i]];
                 $convertWidth = floor($this->height * $image['width'] / $image['height']);
-                $thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
-                $imagename = str_replace(' ', '_', preg_replace('#^https?://#', '', $thumbnail));
-                $images[] = $this->covers[$i];
-                $text = "<img src=\"images/$imagename\" alt=\"$imagename\"/>" . $text;
-            }     
-            $text = preg_replace_callback(
-                '/(<a[^>]*>)?<img[^>]*data-resource-id="(\d*)"[^>]*>(<\/a>)?/u',
+                $thumbnail    = $convertWidth < $image['width'] ? sprintf(
+                    $image['thumbnail'],
+                    $convertWidth
+                ) : $image['url'];
+                $imagename    = str_replace(' ', '_', preg_replace('#^https?://#', '', $thumbnail));
+                $images[]     = $this->covers[$i];
+                $text         = "<img src=\"images/{$imagename}\" alt=\"{$imagename}\"/>" . $text;
+            }
+            $text       = preg_replace_callback(
+                '@(<a[^>]*>)?<img[^>]*data-resource-id="(\d*)"[^>]*>(</a>)?@u',
                 function ($match) use (&$images) {
-                    $image = $this->images[$match[2]];
-					$convertWidth = floor($this->height * $image['width'] / $image['height']);
-                    $thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
-                    $imagename = preg_replace('#^https?://#', '', $thumbnail);
-					$images[] = $match[2];
-                    return "<div class=\"center\"><img src=\"images/" . str_replace(
-                        ' ',
-                        '_',
-                        $imagename
-                    ) . "\" alt=\"" . str_replace(' ', '_', $imagename) . "\"/></div>";
-					
+                    $image        = $this->images[$match[2]];
+                    $convertWidth = floor($this->height * $image['width'] / $image['height']);
+                    $thumbnail    = $convertWidth < $image['width'] ? sprintf(
+                        $image['thumbnail'],
+                        $convertWidth
+                    ) : $image['url'];
+                    $imagename    = preg_replace('#^https?://#', '', $thumbnail);
+                    $imagename    = str_replace(' ', '_', $imagename);
+                    $images[]     = $match[2];
+                    return "<img src=\"images/{$imagename}\" alt=\"{$imagename}\"/>";
                 },
                 $text
             );
-			$firstImage = strpos($text,'<img');
-			if ($firstImage !== false && $firstImage < strpos($text,'<h'))
-			{
-				$text = "<h2>Начальные иллюстрации</h2>" . $text;
-			}
-        }		
-		
-        $j = 0;
-        $notes = "<h2>Примечания</h2>\n\t\n";
+            $firstImage = strpos($text, '<img');
+            if ($firstImage !== false && $firstImage < strpos($text, '<h')) {
+                $text = "<h2>Начальные иллюстрации</h2>" . $text;
+            }
+        }
+
+        $j         = 0;
+        $notes     = "<h2>Примечания</h2>\n\t\n";
         $isnotes   = false;
         $footnotes = explode(',;,', $this->footnotes);
-		
-		for ($i = 0; $i < sizeof($footnotes); $i++) {			
+
+        for ($i = 0; $i < sizeof($footnotes); $i++) {
             if (is_numeric($footnotes[$i])) {
                 $isnotes = true;
-				$text = str_replace('<a href="#cite_note-'.$footnotes[$i].'">*</a>', 
-				                    '<a epub:type="noteref"  href="notes.xhtml#note'.$j.'" class="reference" id="ref'.$j.'">['.$j.']</a>', $text);
+                $text    = str_replace(
+                    '<a href="#cite_note-' . $footnotes[$i] . '">*</a>',
+                    '<a epub:type="noteref"  href="notes.xhtml#note' . $j . '" class="reference" id="ref' . $j . '">[' . $j . ']</a>',
+                    $text
+                );
                 $notes .= "\t<div class=\"notes\"><aside epub:type=\"rearnote\" class=\"note\" id=\"note$j\">$j. " . $footnotes[$i + 1] . "</aside></div>\n";
                 $i++;
                 $j++;
             }
         }
         if ($isnotes == true) {
+        } else {
+            $notes = '';
         }
-		else {
-			$notes = '';
-		}
 
         $text     = trim($text);
         $epubText = "$descr[annotation]$credit$text$notes";
 
-		$epubText = preg_replace('@section@', "div", $epubText);
+        $epubText = preg_replace('@section@', "div", $epubText);
 
         /* Delete extra <br/> tag before images */
-        $epubText = preg_replace('@<div>(.){0,20}<br\/>(.){0,20}<img src@', '<div><img src', $epubText);
+        $epubText = preg_replace('@<div>\s*<br/>\s*<img src@', '<div><img src', $epubText);
 
         // Delete extra page breaks related to images.
-		$epubText = preg_replace('@<div[^>]*>(.){0,20}(<img[^>]*>)(.){0,20}<\/div>@', "\\1\\2\\3", $epubText);
-		$epubText = preg_replace('@<p[^>]*>(.){0,20}(<img[^>]*>)(.){0,20}<\/p>@', "\\1\\2\\3", $epubText);
-		
-		/* Swap h2 and img tags if img follows h2. (It gave a bad look in docx). */
-        $epubText = preg_replace('@(<h2>.{0,100}<\/h2>)(<img[^>]*>)@', '\\2\\1', $epubText);
+        $epubText = preg_replace('@<div[^>]*>\s*(<img[^>]*>)\s*</div>@', '\1', $epubText);
+        $epubText = preg_replace('@<p[^>]*>\s*(<img[^>]*>)\s*</p>@', '\1', $epubText);
+
+        /* Swap h2 and img tags if img follows h2. (It gave a bad look in docx). */
+        $epubText = preg_replace('@(<h2>[^<]*</h2>)(<img[^>]*>)@', '\2\1', $epubText);
 
         /* After swap we often needs to further lift img tag in previous <div> or <p> tag */
         $epubText = preg_replace(
-            '@<\/div>(<img[^>]*>)<h2@',
-            '\\1</div><h2',
-            $epubText
-        );	
-        $epubText = preg_replace(
-            '@<\/p>(<img[^>]*>)<h2@',
-            '\\1</p><h2',
+            '@</div>(<img[^>]*>)<h2@',
+            '\1</div><h2',
             $epubText
         );
-		
+        $epubText = preg_replace(
+            '@</p>(<img[^>]*>)<h2@',
+            '\1</p><h2',
+            $epubText
+        );
+
         /*
            ---------------------------------------------------------------------------------------------------
            Common part (Some pieces like images were docx specific though) with DOCX Ended. Epub specific part
@@ -232,14 +238,14 @@ class EpubConverter extends Converter
 
         /* Eliminate warning "element "br" not allowed here;..." */
         $epubText = preg_replace('@(<br.*?/>)@', "<p>\\1</p>", $epubText);
-		
-		// delete p tag attributes such as data-chapter-id and so on.
-		$epubText = preg_replace('@<p[^>]*>@', '<p>', $epubText);
-		
-		// delete strange tags combination which i saw once in fb2 
-		$epubText = preg_replace('@<p></p>@', '<br/>', $epubText);	
 
-		$epub = new \PHPePub\Core\EPub(\PHPePub\Core\EPub::BOOK_VERSION_EPUB3, 'ru');
+        // delete p tag attributes such as data-chapter-id and so on.
+        $epubText = preg_replace('@<p[^>]*>@', '<p>', $epubText);
+
+        // delete strange tags combination which i saw once in fb2
+        $epubText = preg_replace('@<p></p>@', '<br/>', $epubText);
+
+        $epub = new \PHPePub\Core\EPub(\PHPePub\Core\EPub::BOOK_VERSION_EPUB3, 'ru');
 
         $epub->setLanguage("ru");
 
@@ -313,35 +319,36 @@ class EpubConverter extends Converter
 
         //
 
-		
-		
         $i = 0;
-		foreach ($images as $imageid) {
-			$image = $this->images[$imageid];
-			// $aspectratio = ($image['width']) / ($image['height']);
-			if ($this->height > 0) {
-				// if ($aspectratio > 1.0) {
-				// 	$resizedwidth  = $this->height;
-				// 	$resizedheight = $this->height / $aspectratio;
-				// } else {
-				// 	$resizedheight = $this->height;
-				// 	$resizedwidth  = ($this->height) * ($aspectratio);
-				// }
+        foreach ($images as $imageid) {
+            $image = $this->images[$imageid];
+            // $aspectratio = ($image['width']) / ($image['height']);
+            if ($this->height > 0) {
+                // if ($aspectratio > 1.0) {
+                // 	$resizedwidth  = $this->height;
+                // 	$resizedheight = $this->height / $aspectratio;
+                // } else {
+                // 	$resizedheight = $this->height;
+                // 	$resizedwidth  = ($this->height) * ($aspectratio);
+                // }
 
-				$convertWidth = floor($this->height * $image['width'] / $image['height']);
-                $imageurl = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
-                $imagename = preg_replace('#^https?://#', '', $imageurl);
-				
-				$i = $i + 1;
+                $convertWidth = floor($this->height * $image['width'] / $image['height']);
+                $imageurl     = $convertWidth < $image['width'] ? sprintf(
+                    $image['thumbnail'],
+                    $convertWidth
+                ) : $image['url'];
+                $imagename    = preg_replace('#^https?://#', '', $imageurl);
 
-				$epub->addFile(
-					"images/" . str_replace(' ', '_', $imagename),
-					"image-$i",
-					file_get_contents($imageurl),
-					$image['mime_type']
-				);
-			}
-		}
+                $i = $i + 1;
+
+                $epub->addFile(
+                    "images/" . str_replace(' ', '_', $imagename),
+                    "image-$i",
+                    file_get_contents($imageurl),
+                    $image['mime_type']
+                );
+            }
+        }
 
         if ($this->isbn) {
             $epub->setIdentifier($this->isbn, 'ISBN');

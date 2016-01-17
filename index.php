@@ -80,7 +80,6 @@ $app->get(
         $touched     = $db->max(
             'texts_history',
             [
-                '[>]texts'    => ['current_text_id' => 'text_id'],
                 '[>]chapters' => ['current_text_id' => 'text_id'],
             ],
             'insertion_time',

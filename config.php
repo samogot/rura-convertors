@@ -12,6 +12,7 @@ $config = [
     'key'        => '123',
     'public_key' => '123',
     'ga_tid'     => '123',
+    'folder'     => '123',
 ];
 
 if (file_exists(__DIR__ . '/config.local.php')) {
