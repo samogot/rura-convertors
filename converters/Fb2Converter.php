@@ -155,13 +155,12 @@ class Fb2Converter extends Converter
             if($firstImage !== false && $firstImage < strpos($text,'<h'))
 				$text = "<h2>Начальные иллюстрации</h2>" . $text;
         }
-        $j         = 0;
+        $j         = 1;
         $notes     = '';
         $isnotes   = false;
         $footnotes = explode(',;,', $this->footnotes);
         for ($i = 0; $i < sizeof($footnotes); $i++) {
             if (is_numeric($footnotes[$i])) {
-                $j = 0;
                 if ($isnotes == false) {
                     $notes .= "<body name=\"notes\">\n\t<title><p>Примечания</p></title>\n";
                 }

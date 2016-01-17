@@ -144,6 +144,14 @@ class EpubConverter extends Converter
         if ($this->height == 0) {
             $text = preg_replace('/(<p[^>]*>)?(<a[^>]*>)?<img[^>]*>(<\/a>)?(<\/p>)?/u', '', $text);
         } else {
+            for ($i = 1; $i < count($this->covers); ++$i) {
+                $image = $this->images[$this->covers[$i]];
+                $convertWidth = floor($this->height * $image['width'] / $image['height']);
+                $thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
+                $imagename = str_replace(' ', '_', preg_replace('#^https?://#', '', $thumbnail));
+                $images[] = $this->covers[$i];
+                $text = "<img src=\"images/$imagename\" alt=\"$imagename\"/>" . $text;
+            }     
             $text = preg_replace_callback(
                 '/(<a[^>]*>)?<img[^>]*data-resource-id="(\d*)"[^>]*>(<\/a>)?/u',
                 function ($match) use (&$images) {
@@ -161,7 +169,7 @@ class EpubConverter extends Converter
                 },
                 $text
             );
-			$firstImage = strpos($text,'<image');
+			$firstImage = strpos($text,'<img');
 			if ($firstImage !== false && $firstImage < strpos($text,'<h'))
 			{
 				$text = "<h2>Начальные иллюстрации</h2>" . $text;

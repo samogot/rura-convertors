@@ -173,12 +173,18 @@ class DocxConverter extends Converter
             $text = preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u', '', $text);
 
         } else {
-            
+        	for ($i = 1; $i < count($this->covers); ++$i) {
+				$image = $this->images[$this->covers[$i]];
+				$convertWidth = min($image['width'], floor($this->height * $image['width'] / $image['height']));
+				$convertHeight = min($image['height'], $this->height);
+				$thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
+				$text = "<img src=\"" . $thumbnail . "\" width=\"" . $convertWidth . "\" height=\"" . $convertHeight . "\" />" . $text;
+        	}            
             $text        = preg_replace_callback(
                 '/(<a[^>]*>)?<img[^>]*data-resource-id="(\d*)"[^>]*>(<\/a>)?/u',
                 function ($match) use (&$images) {		
 					$image = $this->images[$match[2]];
-					$innerHeight = $this->height;
+					// $innerHeight = $this->height;
 					
 					$convertWidth = min($image['width'], floor($this->height * $image['width'] / $image['height']));
 					$convertHeight = min($image['height'], $this->height);
@@ -213,11 +219,11 @@ class DocxConverter extends Converter
                 $text
             );
 			
-			 $firstImage = strpos($text,'<image');
-             if($firstImage !== false && $firstImage < strpos($text,'<h'))
-			 {
- 				$text = "<h2>Начальные иллюстрации</h2>" . $text;
-			 }
+			 // $firstImage = strpos($text,'<image');
+             // if($firstImage !== false && $firstImage < strpos($text,'<h'))
+			 // {
+ 				// $text = "<h2>Начальные иллюстрации</h2>" . $text;
+			 // }
         }
 
 		
