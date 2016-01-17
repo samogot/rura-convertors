@@ -85,7 +85,7 @@ abstract class Converter
         $cache_filename = $this->config['folder'] . $part_filename;
         $json = $this->apiCall('disk/resources', ['fields' => 'modified', 'path' => $cache_filename]);
         $bin = false;
-        if (!isset($json->modified) || strtotime($this->touched) > strtotime($json->modified)) {
+        if (!isset($json->modified) || $this->touched > strtotime($json->modified)) {
             $bin  = $this->convertImpl($this->text_to_convert);
             $json = $this->apiCall('disk/resources', ['path' => dirname($cache_filename)], [CURLOPT_PUT => true]);
             if (isset($json->error) && $json->error == 'DiskPathDoesntExistsError') {
