@@ -903,16 +903,16 @@ function htmltodocx_insert_html_recursive(&$phpword_object, $phpword_element, $h
       
       case 'img':
         $image_style = array();
-		if (strpos($element->src, $state['base_root']) === 0)
-		{
-          // The image source is a full url, but nevertheless it is on this
-          // server.
-          $element_src = substr($element->src, strlen($state['base_root']));
-        }
-        else 
-		{
+//		if (strpos($element->src, $state['base_root']) === 0)
+//		{
+//          // The image source is a full url, but nevertheless it is on this
+//          // server.
+//          $element_src = substr($element->src, strlen($state['base_root']));
+//        }
+//        else
+//		{
           $element_src = $element->src;
-        }
+//        }
         
         if (strpos($element_src, 'http://') === 0) 
 		{

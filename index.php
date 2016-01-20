@@ -85,7 +85,7 @@ $app->get(
             'insertion_time',
             ['volume_id' => $volume['volume_id']]
         );
-        $touched     = strtotime($touched);
+        $touched     = strtotime($touched) ?: time();
         $activities  = $db->select(
             'volume_release_activities',
             [

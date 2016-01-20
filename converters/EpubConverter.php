@@ -1,10 +1,6 @@
 <?php
 namespace Ruranobe\Converters;
 
-require_once(__DIR__ . '/../lib/docx/htmltodocx_converter/h2d_htmlconverter.php');
-require_once(__DIR__ . '/../lib/docx/example_files/styles.inc');
-require_once(__DIR__ . '/../lib/docx/documentation/support_functions.inc');
-
 /**
  * Author: Keiko
  * Class EpubConverter
