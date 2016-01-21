@@ -63,7 +63,7 @@ class DocxConverter extends Converter
             $image       = $this->images[$cover];
             /* Width and height are unimportant. Actual resizing is done not in this class. We must save aspect ratio though. */
             $descr['coverpage']   = "<img src=\"" . $image['thumbnail'] . "\" width=\"" . $image['convert_width'] .
-                "\" height=\"" . $image['convert_Height'] . "\" />";
+                "\" height=\"" . $image['convert_height'] . "\" />";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
         }
