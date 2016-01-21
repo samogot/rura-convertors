@@ -193,7 +193,7 @@ $app->get(
             $image         = $images_temp[$i];
             $convertWidth  = floor($height * $image['width'] / $image['height']);
             $convertWidth  = min($convertWidth, $image['width']);
-            $convertHeight = min($image['height'], $this->height);
+            $convertHeight = min($image['height'], $height);
             $thumbnail     = sprintf($image['thumbnail'], $convertWidth);
             if (strpos($thumbnail, $this->config['repo_prefix']) === 0) {
                 $file_path = $this->config['repo_prefix'] . substr($thumbnail, strlen($this->config['repo_prefix']));
