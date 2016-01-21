@@ -178,9 +178,7 @@ class Fb2Converter extends Converter
         if ($images) {
             foreach ($images as $imageid) {
 				$image = $this->images[$imageid];
-				$convertWidth = floor($this->height * $image['width'] / $image['height']);
-				$thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
-                $fileContents = file_get_contents($thumbnail);
+                $fileContents = file_get_contents($image['thumbnail']);
                 if ($fileContents) {
 					$title = $image['title'];
                     $binary .= '<binary id="' . $title . '" content-type="' . $image['mime_type'] . '">' . "\n" . base64_encode(

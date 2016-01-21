@@ -190,14 +190,30 @@ $app->get(
 
         $images = array();
         for ($i = 0; $i < sizeof($images_temp); $i++) {
-            $temp                         = $images_temp[$i];
-            $images[$temp['resource_id']] = [
-                'mime_type' => $temp['mime_type'],
-                'url'       => $temp['url'],
-                'thumbnail' => $temp['thumbnail'],
-                'width'     => $temp['width'],
-                'height'    => $temp['height'],
-                'title'     => $temp['title']
+            $image         = $images_temp[$i];
+            $convertWidth  = floor($height * $image['width'] / $image['height']);
+            $convertWidth  = min($convertWidth, $image['width']);
+            $convertHeight = min($image['height'], $this->height);
+            $thumbnail     = sprintf($image['thumbnail'], $convertWidth);
+            if (strpos($thumbnail, $this->config['repo_prefix']) === 0) {
+                $file_path = $this->config['repo_prefix'] . substr($thumbnail, strlen($this->config['repo_prefix']));
+                if (is_readable($file_path)) {
+                    $image['thumbnail'] = $file_path;
+                } else {
+                    $image['thumbnail'] = 'http:' . $thumbnail;
+                }
+            } else {
+                $image['thumbnail'] = $thumbnail;
+            }
+            $images[$image['resource_id']] = [
+                'mime_type'      => $image['mime_type'],
+                'url'            => $image['url'],
+                'thumbnail'      => $image['thumbnail'],
+                'width'          => $image['width'],
+                'height'         => $image['height'],
+                'convert_width'  => $convertWidth,
+                'convert_height' => $convertHeight,
+                'title'          => $image['title']
             ];
         }
 

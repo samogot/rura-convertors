@@ -48,58 +48,34 @@ class DocxConverter extends Converter
         }
 
         $descr['annotation'] = '';
-		if($this->annotation) {
-			$this->annotation = preg_replace('@\n@', '</p><p>', $this->annotation);
-			$this->annotation = preg_replace("@'''(.*?)'''@", '<b>\\1</b>', $this->annotation);
-			$this->annotation = preg_replace("@''(.*?)''@", '<i>\\1</i>', $this->annotation);
-			$this->annotation = preg_replace('@<p></p>@', '<br/>', $this->annotation);
-			$descr['annotation'] = "<h2>Аннотация</h2><p>$this->annotation</p>";
+        if ($this->annotation) {
+            $this->annotation    = preg_replace('@\n@', '</p><p>', $this->annotation);
+            $this->annotation    = preg_replace("@'''(.*?)'''@", '<b>\\1</b>', $this->annotation);
+            $this->annotation    = preg_replace("@''(.*?)''@", '<i>\\1</i>', $this->annotation);
+            $this->annotation    = preg_replace('@<p></p>@', '<br/>', $this->annotation);
+            $descr['annotation'] = "<h2>Аннотация</h2><p>$this->annotation</p>";
         }
 
         $images = [];
         if ($this->covers) {
-			$innerHeight = $this->height;
-			$cover = $this->covers[0];
-			$image = $this->images[$cover];
-			
-			$convertWidth = min($image['width'], floor($this->height * $image['width'] / $image['height']));
-			$convertHeight = min($image['height'], $this->height);
-			$thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
-		
-			// $innerImageUrl = $image['url'];
-			// $innerResizedWidth = $image['width'];
-			// $innerResizedHeight = $image['height'];
-		
-			// if (file_get_contents($thumbnail, 0, null, 0, 1)) {
-			// 	$innerAspectRatio = $image['width'] / $image['height'];
-			// 	if ($innerHeight > 0) {
-			// 		if ($innerAspectRatio > 1.0) {
-			// 			$innerResizedWidth  = $innerHeight;
-			// 			$innerResizedHeight = $innerHeight / $innerAspectRatio;
-			// 		} else {
-			// 			$innerResizedHeight = $innerHeight;
-			// 			$innerResizedWidth  = $innerHeight * $innerAspectRatio;
-			// 		}
-			// 	}
-				
-			// 	if (!$innerAspectRatio) {
-			// 		return "";
-			// 	}
-
-			// 	$innerImageUrl = sprintf($image['thumbnail'], $innerResizedWidth);						
-			// }
-
-			/* Width and height are unimportant. Actual resizing is done not in this class. We must save aspect ratio though. */
-			$descr['coverpage']  = "<img src=\"" . $thumbnail . "\" width=\"" . $convertWidth . "\" height=\"" . $convertHeight . "\" />";
+            $innerHeight = $this->height;
+            $cover       = $this->covers[0];
+            $image       = $this->images[$cover];
+            /* Width and height are unimportant. Actual resizing is done not in this class. We must save aspect ratio though. */
+            $descr['coverpage']   = "<img src=\"" . $image['thumbnail'] . "\" width=\"" . $image['convert_width'] .
+                "\" height=\"" . $image['convert_Height'] . "\" />";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
         }
 
-	//	echo $descr['coverpage'];
+        //	echo $descr['coverpage'];
 //		exit;
-		
+
         if ($this->translators) {
             foreach ($this->translators as $translator) {
+                if (!array_key_exists('translator', $descr)) {
+                    $descr['translator'] = '';
+                }
                 $descr['translator'] .= "<p name=\"translator\">$translator</p>";
             }
         }
@@ -109,7 +85,7 @@ class DocxConverter extends Converter
         }
 
         $descr['date2'] = date('j F Y, H:i', $this->touched);
-        $descr['id'] = 'RuRa_' . str_replace('/', '_', $this->nameurl);
+        $descr['id']    = 'RuRa_' . str_replace('/', '_', $this->nameurl);
 
         if ($this->isbn) {
             $descr['isbn'] = ";isbn:{$this->isbn}";
@@ -173,61 +149,24 @@ class DocxConverter extends Converter
             $text = preg_replace('/(<p[^>]*>)?<img[^>]*>(<\/p>)?/u', '', $text);
 
         } else {
-        	for ($i = 1; $i < count($this->covers); ++$i) {
-				$image = $this->images[$this->covers[$i]];
-				$convertWidth = min($image['width'], floor($this->height * $image['width'] / $image['height']));
-				$convertHeight = min($image['height'], $this->height);
-				$thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
-				$text = "<img src=\"" . $thumbnail . "\" width=\"" . $convertWidth . "\" height=\"" . $convertHeight . "\" />" . $text;
-        	}            
-            $text        = preg_replace_callback(
+            for ($i = 1; $i < count($this->covers); ++$i) {
+                $image = $this->images[$this->covers[$i]];
+                $text  = "<img src=\"" . $image['thumbnail'] . "\" width=\"" . $image['convert_width'] .
+                    "\" height=\"" . $image['convert_height'] . "\" />" . $text;
+            }
+            $text = preg_replace_callback(
                 '/(<a[^>]*>)?<img[^>]*data-resource-id="(\d*)"[^>]*>(<\/a>)?/u',
-                function ($match) use (&$images) {		
-					$image = $this->images[$match[2]];
-					// $innerHeight = $this->height;
-					
-					$convertWidth = min($image['width'], floor($this->height * $image['width'] / $image['height']));
-					$convertHeight = min($image['height'], $this->height);
-					$thumbnail = $convertWidth < $image['width'] ? sprintf($image['thumbnail'], $convertWidth) : $image['url'];
-		
-				 //    $innerImageUrl = $image['url'];
-					// $innerResizedWidth = $image['width'];
-					// $innerResizedHeight = $image['height'];
-				
-     //                if (file_get_contents($thumbnail, 0, null, 0, 1)) {
-     //                    $innerAspectRatio = $image['width'] / $image['height'];
-     //                    if ($innerHeight > 0) {
-     //                        if ($innerAspectRatio > 1.0) {
-     //                            $innerResizedWidth  = $innerHeight;
-     //                            $innerResizedHeight = $innerHeight / $innerAspectRatio;
-     //                        } else {
-     //                            $innerResizedHeight = $innerHeight;
-     //                            $innerResizedWidth  = $innerHeight * $innerAspectRatio;
-     //                        }
-     //                    }
-						
-     //                    if (!$innerAspectRatio) {
-     //                        return "";
-     //                    }
-
-     //                    $innerImageUrl = sprintf($image['thumbnail'], $innerResizedWidth);						
-     //                }
-				
+                function ($match) use (&$images) {
+                    $image = $this->images[$match[2]];
                     /* Width and height are unimportant. Actual resizing is done not in this class. We must save aspect ratio though. */
-                    return "<img src=\"" . $thumbnail . "\" width=\"" . $convertWidth . "\" height=\"" . $convertHeight . "\" />";
+                    return "<img src=\"" . $image['thumbnail'] . "\" width=\"" . $image['convert_width'] .
+                    "\" height=\"" . $image['convert_height'] . "\" />";
                 },
                 $text
             );
-			
-			 // $firstImage = strpos($text,'<image');
-             // if($firstImage !== false && $firstImage < strpos($text,'<h'))
-			 // {
- 				// $text = "<h2>Начальные иллюстрации</h2>" . $text;
-			 // }
         }
 
-		
-		$footnotes = array();
+        $footnotes      = array();
         $footnotes_temp = explode(',;,', $this->footnotes);
         for ($i = 0; $i < sizeof($footnotes_temp); $i++) {
             if (is_numeric($footnotes_temp[$i])) {
@@ -239,40 +178,36 @@ class DocxConverter extends Converter
         $text     = trim($text);
         $epubText = "<html>
 	<body>
-		$descr[coverpage]
-		$descr[author]
-		$descr[sequence]
-	    $descr[annotation]
-		$credit
-		$text
+		{$descr['coverpage']}
+		{$descr['author']}
+		{$descr['sequence']}
+	    {$descr['annotation']}
+		{$credit}
+		{$text}
 	</body>
 	</html>";
 
-	
-		$epubText = preg_replace_callback(
-                '@(<span[^>]*><a href="#cite_note-(\d*)"[^>]*>.{0,15}</span>)@',
-                function ($match) use (&$footnotes) {
-					$footnote = $footnotes[$match[2]];
-					if ($footnote)
-					{
-						return '<footnote>'.$footnote.'</footnote>';
-					}
-					else
-					{
-						return $match[1];
-					}
-                },
-                $epubText
-            );
-		
-		//preg_replace('@cite_note-(\d*)@',"<footnote></footnote>", $epubText);
-		//echo '<xmp>'.$epubText;
-		//echo $footnotes[137603266];
-		//exit;
-		
-		//echo '<xmp>'.$epubText;
-		//exit;
-	
+        $epubText = preg_replace_callback(
+            '@(<span[^>]*><a href="#cite_note-(\d*)"[^>]*>.{0,15}</span>)@',
+            function ($match) use (&$footnotes) {
+                $footnote = $footnotes[$match[2]];
+                if ($footnote) {
+                    return '<footnote>' . $footnote . '</footnote>';
+                } else {
+                    return $match[1];
+                }
+            },
+            $epubText
+        );
+
+        //preg_replace('@cite_note-(\d*)@',"<footnote></footnote>", $epubText);
+        //echo '<xmp>'.$epubText;
+        //echo $footnotes[137603266];
+        //exit;
+
+        //echo '<xmp>'.$epubText;
+        //exit;
+
         $epubText = preg_replace('@section@', "div", $epubText);
 
         /* Delete extra <br/> tag before images */
@@ -287,18 +222,18 @@ class DocxConverter extends Converter
 
         // Styles of elements in which footnote is nested should not count. Thus close them
         $epubText = preg_replace('@pb@', "br", $epubText);
-		
-		//echo '<xmp>'.$epubText;
-		//exit;
-		
-		//PHPWord doesn't support tags nested in link element. Unnest images from them
-		$epubText = preg_replace('@<a[^>]*>(<img[^>]*>)<\/a>@', "\\1", $epubText);
-		
-		// Delete extra page breaks related to images.
-		$epubText = preg_replace('@<div[^>]*>(.){0,20}(<img[^>]*>)(.){0,20}<\/div>@', "\\1\\2\\3", $epubText);
-		$epubText = preg_replace('@<p[^>]*>(.){0,20}(<img[^>]*>)(.){0,20}<\/p>@', "\\1\\2\\3", $epubText);
-		
-		/* Swap h2 and img tags if img follows h2. (It gave a bad look in docx). */
+
+        //echo '<xmp>'.$epubText;
+        //exit;
+
+        //PHPWord doesn't support tags nested in link element. Unnest images from them
+        $epubText = preg_replace('@<a[^>]*>(<img[^>]*>)<\/a>@', "\\1", $epubText);
+
+        // Delete extra page breaks related to images.
+        $epubText = preg_replace('@<div[^>]*>(.){0,20}(<img[^>]*>)(.){0,20}<\/div>@', "\\1\\2\\3", $epubText);
+        $epubText = preg_replace('@<p[^>]*>(.){0,20}(<img[^>]*>)(.){0,20}<\/p>@', "\\1\\2\\3", $epubText);
+
+        /* Swap h2 and img tags if img follows h2. (It gave a bad look in docx). */
         $epubText = preg_replace('@(<h2>.{0,100}<\/h2>)(<img[^>]*>)@', '\\2\\1', $epubText);
 
         /* After swap we often needs to further lift img tag in previous <div> or <p> tag */
@@ -306,16 +241,16 @@ class DocxConverter extends Converter
             '@<\/div>(<img[^>]*>)<h2@',
             '\\1</div><h2',
             $epubText
-        );	
+        );
         $epubText = preg_replace(
             '@<\/p>(<img[^>]*>)<h2@',
             '\\1</p><h2',
             $epubText
         );
-		
-		//echo '<xmp>'.$epubText;
-		//exit;
-		
+
+        //echo '<xmp>'.$epubText;
+        //exit;
+
         $phpword_object = new \PhpOffice\PhpWord\PhpWord();
         \PhpOffice\PhpWord\Settings::setCompatibility(false);
 
@@ -364,10 +299,9 @@ class DocxConverter extends Converter
 
         htmltodocx_insert_html($phpword_object, $html_dom_array[0]->nodes, $initial_state);
 
-				
-		//var_dump($html_dom_array[0]->nodes);
+        //var_dump($html_dom_array[0]->nodes);
 //		exit;
-		
+
         $html_dom->clear();
         unset($html_dom);
         $h2d_file_uri = tempnam(sys_get_temp_dir(), 'htd');

@@ -53,23 +53,17 @@ class EpubConverter extends Converter
         if ($this->covers) {
             $cover                = $this->covers[0];
             $image                = $this->images[$cover];
-            $convertWidth         = floor($this->height * $image['width'] / $image['height']);
-            $thumbnail            = $convertWidth < $image['width'] ? sprintf(
-                $image['thumbnail'],
-                $convertWidth
-            ) : $image['url'];
-            $imagename            = preg_replace('#^https?://#', '', $thumbnail);
-            $descr['coverpage']   = "<div class=\"center\"><img src=\"images/" . str_replace(
-                    ' ',
-                    '_',
-                    $imagename
-                ) . "\" alt=\"" . str_replace(' ', '_', $imagename) . "\"/></div>";
+            $title                = str_replace(' ', '_', $image['title']);
+            $descr['coverpage']   = "<div class=\"center\"><img src=\"images/{$title}\" alt=\"{$title}\"/></div>";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
         }
 
         if ($this->translators) {
             foreach ($this->translators as $translator) {
+                if (!array_key_exists('translator', $descr)) {
+                    $descr['translator'] = '';
+                }
                 $descr['translator'] .= "<p class=\"translator\">$translator</p>";
             }
         }
@@ -144,29 +138,18 @@ class EpubConverter extends Converter
             $text = preg_replace('@(<p[^>]*>)?(<a[^>]*>)?<img[^>]*>(</a>)?(</p>)?@u', '', $text);
         } else {
             for ($i = 1; $i < count($this->covers); ++$i) {
-                $image        = $this->images[$this->covers[$i]];
-                $convertWidth = floor($this->height * $image['width'] / $image['height']);
-                $thumbnail    = $convertWidth < $image['width'] ? sprintf(
-                    $image['thumbnail'],
-                    $convertWidth
-                ) : $image['url'];
-                $imagename    = str_replace(' ', '_', preg_replace('#^https?://#', '', $thumbnail));
-                $images[]     = $this->covers[$i];
-                $text         = "<img src=\"images/{$imagename}\" alt=\"{$imagename}\"/>" . $text;
+                $image    = $this->images[$this->covers[$i]];
+                $images[] = $this->covers[$i];
+                $title    = str_replace(' ', '_', $image['title']);
+                $text     = "<img src=\"images/{$title}\" alt=\"{$title}\"/>" . $text;
             }
             $text       = preg_replace_callback(
                 '@(<a[^>]*>)?<img[^>]*data-resource-id="(\d*)"[^>]*>(</a>)?@u',
                 function ($match) use (&$images) {
-                    $image        = $this->images[$match[2]];
-                    $convertWidth = floor($this->height * $image['width'] / $image['height']);
-                    $thumbnail    = $convertWidth < $image['width'] ? sprintf(
-                        $image['thumbnail'],
-                        $convertWidth
-                    ) : $image['url'];
-                    $imagename    = preg_replace('#^https?://#', '', $thumbnail);
-                    $imagename    = str_replace(' ', '_', $imagename);
-                    $images[]     = $match[2];
-                    return "<img src=\"images/{$imagename}\" alt=\"{$imagename}\"/>";
+                    $image     = $this->images[$match[2]];
+                    $images[]  = $match[2];
+                    $title    = str_replace(' ', '_', $image['title']);
+                    return "<img src=\"images/{$title}\" alt=\"{$title}\"/>";
                 },
                 $text
             );
@@ -310,37 +293,17 @@ class EpubConverter extends Converter
             }
         }
 
-//echo '<xmp>'.$epubText;exit;
-        //$epub->addChapter("part-1", "part", $epubText, true);
-
         //
 
         $i = 0;
         foreach ($images as $imageid) {
             $image = $this->images[$imageid];
-            // $aspectratio = ($image['width']) / ($image['height']);
             if ($this->height > 0) {
-                // if ($aspectratio > 1.0) {
-                // 	$resizedwidth  = $this->height;
-                // 	$resizedheight = $this->height / $aspectratio;
-                // } else {
-                // 	$resizedheight = $this->height;
-                // 	$resizedwidth  = ($this->height) * ($aspectratio);
-                // }
-
-                $convertWidth = floor($this->height * $image['width'] / $image['height']);
-                $imageurl     = $convertWidth < $image['width'] ? sprintf(
-                    $image['thumbnail'],
-                    $convertWidth
-                ) : $image['url'];
-                $imagename    = preg_replace('#^https?://#', '', $imageurl);
-
                 $i = $i + 1;
-
                 $epub->addFile(
-                    "images/" . str_replace(' ', '_', $imagename),
+                    "images/" . str_replace(' ', '_', $image['title']),
                     "image-$i",
-                    file_get_contents($imageurl),
+                    file_get_contents($image['thumbnail']),
                     $image['mime_type']
                 );
             }
