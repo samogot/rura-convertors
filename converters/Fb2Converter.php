@@ -188,7 +188,18 @@ class Fb2Converter extends Converter
             }
         }
 
-		// delete p tag attributes such as data-chapter-id and so on.
+				
+		// add type attribute to footnotes
+		$footnote_num=1;
+		$text = preg_replace_callback(
+                '@<span[^>]*class="reference"><a ([^>]*)>\*</a></span>@',
+                function ($match) use (&$footnote_num) {
+                    return '<a type="note" '.$match[1].'>'.($footnote_num++).'</a>';
+                },
+                $text
+            );
+
+        // delete p tag attributes such as data-chapter-id and so on.
 		$text = preg_replace('@<p[^>]*>@', '<p>', $text);
 		
 		// delete strange tags combination which i saw once in fb2 
@@ -202,9 +213,9 @@ class Fb2Converter extends Converter
 		//$text = preg_replace('@(data-content[^\"]*\"[^\"]*\")@', '', $text);	
 		
 		// add subtitles
-        $text = preg_replace('@<div class=\"center subtitle\">(.*?)<\/div>@u', '<subtitle>\\1</subtitle>', $text); 
+        $text = preg_replace('@<div.*class=\"center subtitle\">(.*?)<\/div>@u', '<subtitle>\\1</subtitle>', $text); 
 		$text = preg_replace('@<p>\s*<subtitle>(.*?)</subtitle>\s*<\/p>@u', '<subtitle>\\1</subtitle>', $text); 
-		
+
 		// delete unsupported div tags
 		$text = preg_replace('@<div[^>]*>(.*?)<\/div>@u', '\\1', $text);	
 		
@@ -270,7 +281,7 @@ class Fb2Converter extends Converter
 		$text = preg_replace('@<b>(.*?)<\/b>@', '<strong>\\1</strong>', $text);	
 		
 		// change href to l:href and delete unsupported a attributes
-		$text = preg_replace('@<a(.*?)(href=\"[^\"]*\")(.*?)>@', '<a l:\\2>', $text);
+		$text = preg_replace('@<a( type="note")?(.*?)(href=\"[^\"]*\")(.*?)>@', '<a\\1 l:\\3>', $text);
 		
         $text = trim($text);
         $fb2 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
