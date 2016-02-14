@@ -49,7 +49,7 @@ class Fb2Converter extends Converter
             $cover                = $this->covers[0];
 			$image                = $this->images[$cover];
 			$title                = $image['title'];
-            $descr['coverpage']   = "<coverpage><image l:href=\"#" . str_replace(' ', '_', $title) . "\"/></coverpage>";
+            $descr['coverpage']   = "<coverpage><image l:href=\"#img_$cover\"/></coverpage>";
             $images[]             = $cover;
         }
         $descr['translator'] = "";
@@ -139,7 +139,7 @@ class Fb2Converter extends Converter
 				$image = $this->images[$this->covers[$i]];
 				$images[] = $this->covers[$i];
 				$title = $image['title'];
-				$text = "<image l:href=\"#" . str_replace(' ', '_', $title) . "\"/>" . $text;
+				$text = "<image l:href=\"#img_{$this->covers[$i]}\"/>" . $text;
         	}
             $text = preg_replace_callback(
                 '/(<a[^>]*>)?<img[^>]*data-resource-id="(\d*)"[^>]*>(<\/a>)?/u',
@@ -147,7 +147,7 @@ class Fb2Converter extends Converter
 					$image = $this->images[$match[2]];
 					$images[] = $match[2];
 					$title = $image['title'];
-                    return "<image l:href=\"#" . str_replace(' ', '_', $title) . "\"/>";
+                    return "<image l:href=\"#img_$match[2]\"/>";
                 },
                 $text
             );
@@ -180,8 +180,7 @@ class Fb2Converter extends Converter
 				$image = $this->images[$imageid];
                 $fileContents = file_get_contents($image['thumbnail']);
                 if ($fileContents) {
-					$title = $image['title'];
-                    $binary .= '<binary id="' . $title . '" content-type="' . $image['mime_type'] . '">' . "\n" . base64_encode(
+					$binary .= '<binary id="img_' . $imageid . '" content-type="' . $image['mime_type'] . '">' . "\n" . base64_encode(
                             $fileContents
                         ) . "\n</binary>";
                 }
