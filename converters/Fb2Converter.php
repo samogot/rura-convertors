@@ -201,6 +201,7 @@ class Fb2Converter extends Converter
 
         // delete p tag attributes such as data-chapter-id and so on.
 		$text = preg_replace('@<p[^>]*>@', '<p>', $text);
+		$notes = preg_replace('@<p[^>]*>@', '<p>', $notes);
 		
 		// delete strange tags combination which i saw once in fb2 
 		$text = preg_replace('@<p></p>@', '<empty-line/>', $text);	
@@ -218,9 +219,11 @@ class Fb2Converter extends Converter
 
 		// delete unsupported div tags
 		$text = preg_replace('@<div[^>]*>(.*?)<\/div>@u', '\\1', $text);	
+		$notes = preg_replace('@<div[^>]*>(.*?)<\/div>@u', '\\1', $notes);	
 		
 		// delete unsupported span tags
 		$text = preg_replace('@<span[^>]*>(.*?)<\/span>@u', '\\1', $text);	
+		$notes = preg_replace('@<span[^>]*>(.*?)<\/span>@u', '\\1', $notes);	
 
         // delete p tag around images
 		$text = preg_replace('@(<p>\s*)?(<image[^>]*>)(\s*</p>)?@', '\\2', $text);
@@ -279,6 +282,8 @@ class Fb2Converter extends Converter
 		// replace <i>text</i> with <emphasis>text</emphasis> and <b>text</b> with <strong>text</strong>
 		$text = preg_replace('@<i>(.*?)<\/i>@', '<emphasis>\\1</emphasis>', $text);	
 		$text = preg_replace('@<b>(.*?)<\/b>@', '<strong>\\1</strong>', $text);	
+		$notes = preg_replace('@<i>(.*?)<\/i>@', '<emphasis>\\1</emphasis>', $notes);	
+		$notes = preg_replace('@<b>(.*?)<\/b>@', '<strong>\\1</strong>', $notes);	
 		
 		// change href to l:href and delete unsupported a attributes
 		$text = preg_replace('@<a( type="note")?.*?(href="[^"]*").*?>@', "<a\\1 l:\\2>", $text);
