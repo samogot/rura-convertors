@@ -186,7 +186,6 @@ class Fb2Converter extends Converter
                 }
             }
         }
-
 				
 		// add type attribute to footnotes
 		$footnote_num=1;
@@ -213,7 +212,7 @@ class Fb2Converter extends Converter
 		//$text = preg_replace('@(data-content[^\"]*\"[^\"]*\")@', '', $text);	
 		
 		// add subtitles
-        $text = preg_replace('@<div.*class=\"center subtitle\">(.*?)<\/div>@u', '<subtitle>\\1</subtitle>', $text); 
+        $text = preg_replace('@<div[^>]*class=\"center subtitle\">(.*?)<\/div>@u', '<subtitle>\\1</subtitle>', $text); 
 		$text = preg_replace('@<p>\s*<subtitle>(.*?)</subtitle>\s*<\/p>@u', '<subtitle>\\1</subtitle>', $text); 
 
 		// delete unsupported div tags
