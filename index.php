@@ -101,21 +101,19 @@ $app->get(
         $workers     = [];
         foreach ($activities as $activity) {
             $is_translator = in_array($activity['activity_id'], [1, 2, 10, 11, 13]);
-            if (!$activity['team_hidden']) {
-                if (!array_key_exists($activity['team_name'], $teams)) {
-                    $teams[$activity['team_name']] = 0;
-                }
-                $teams[$activity['team_name']] -= $is_translator;
+            if ($activity['team_show_status'] == 'show_team') {
+                $teams[$activity['team_name']] = 0;
+            }
+            else if ($activity['team_show_status'] == 'show_nick') {
+                $teams[$activity['nickname']] = 0;
             }
             if ($is_translator) {
-                $translators[$activity['nickname']] = null;
+                $translators[$activity['nickname']] = 0;
             }
             $workers[$activity['activity_name']][] = $activity['nickname'];
         }
-        asort($teams);
         $teams       = array_keys($teams);
         $translators = array_keys($translators);
-        sort($translators);
         $texts = $db->select(
             'texts',
             [
