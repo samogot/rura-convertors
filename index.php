@@ -93,7 +93,7 @@ $app->get(
                 '[>]team_members(tmm)'     => 'member_id',
                 '[>]teams(tm)'             => ['tmm.team_id' => 'team_id'],
             ],
-            ['release_activity_id', 'activity_id', 'activity_name', 'team_name', 'nickname', 'team_hidden'],
+            ['release_activity_id', 'activity_id', 'activity_name', 'team_name', 'nickname', 'team_show_status'],
             ['volume_id' => $volume['volume_id']]
         );
         $teams       = [];
