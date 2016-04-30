@@ -192,7 +192,7 @@ class DocxConverter extends Converter
             function ($match) use (&$footnotes) {
                 $footnote = $footnotes[$match[2]];
                 if ($footnote) {
-                    return '<footnote>' . $footnote . '</footnote>';
+                    return '<footnote><p>' . $footnote . '</p></footnote>';
                 } else {
                     return $match[1];
                 }
