@@ -892,6 +892,10 @@ function htmltodocx_insert_html_recursive(&$phpword_object, $phpword_element, $h
       
       // NB, Simple HTML Dom might not be picking up <br> tags.
       case 'br':
+    if($state['textrun'] instanceof \PhpOffice\PhpWord\Element\Footnote){
+      $state['textrun']->addTextBreak();
+    }
+    else{
         // Simply create a new text run: 
 		if (empty($phpword_element)
 		    || $phpword_element->getSettings()->getMarginTop() === 0)
@@ -899,6 +903,7 @@ function htmltodocx_insert_html_recursive(&$phpword_object, $phpword_element, $h
 		  $phpword_element = $phpword_object->createSection(); 
 		}
         $state['textrun'] = $phpword_element->createTextRun();
+      }
       break;
       
       case 'img':

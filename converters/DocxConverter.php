@@ -191,8 +191,9 @@ class DocxConverter extends Converter
             '@(<span[^>]*><a href="#cite_note-(\d*)"[^>]*>.{0,15}</span>)@',
             function ($match) use (&$footnotes) {
                 $footnote = $footnotes[$match[2]];
+                $footnote = preg_replace('@</p>\s*<p[^>]*>@', '<br/>', $footnote);
                 if ($footnote) {
-                    return '<footnote><p>' . $footnote . '</p></footnote>';
+                    return '<footnote>' . $footnote . '</footnote>';
                 } else {
                     return $match[1];
                 }
