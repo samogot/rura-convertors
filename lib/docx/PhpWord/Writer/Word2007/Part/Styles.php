@@ -164,10 +164,6 @@ class Styles extends AbstractPart
             $styleName = 'heading ' . $arrStyle[1];
             $styleLink = 'Heading' . $arrStyle[1] . 'Char';
             $xmlWriter->writeAttribute('w:styleId', $styleId);
-
-            $xmlWriter->startElement('w:link');
-            $xmlWriter->writeAttribute('w:val', $styleLink);
-            $xmlWriter->endElement();
         }
 
         // Style name
@@ -177,6 +173,13 @@ class Styles extends AbstractPart
 
         // Parent style
         $xmlWriter->writeElementIf(!is_null($paragraphStyle), 'w:basedOn', 'w:val', 'Normal');
+
+        // Heading style
+        if ($styleType == 'title') {
+            $xmlWriter->startElement('w:link');
+            $xmlWriter->writeAttribute('w:val', $styleLink);
+            $xmlWriter->endElement();
+        }
 
         // w:pPr
         if (!is_null($paragraphStyle)) {

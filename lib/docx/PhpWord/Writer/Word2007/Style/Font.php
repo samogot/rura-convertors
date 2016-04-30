@@ -80,6 +80,19 @@ class Font extends AbstractStyle
             $xmlWriter->endElement();
         }
 
+        // Bold, italic
+        $xmlWriter->writeElementIf($style->isBold(), 'w:b');
+        $xmlWriter->writeElementIf($style->isItalic(), 'w:i');
+        $xmlWriter->writeElementIf($style->isItalic(), 'w:iCs');
+
+        // Small caps, all caps
+        $xmlWriter->writeElementIf($style->isSmallCaps(), 'w:smallCaps');
+        $xmlWriter->writeElementIf($style->isAllCaps(), 'w:caps');
+
+        // Strikethrough, double strikethrough
+        $xmlWriter->writeElementIf($style->isStrikethrough(), 'w:strike');
+        $xmlWriter->writeElementIf($style->isDoubleStrikethrough(), 'w:dstrike');
+
         // Color
         $color = $style->getColor();
         $xmlWriter->writeElementIf($color !== null, 'w:color', 'w:val', $color);
@@ -89,30 +102,13 @@ class Font extends AbstractStyle
         $xmlWriter->writeElementIf($size !== null, 'w:sz', 'w:val', $size * 2);
         $xmlWriter->writeElementIf($size !== null, 'w:szCs', 'w:val', $size * 2);
 
-        // Bold, italic
-        $xmlWriter->writeElementIf($style->isBold(), 'w:b');
-        $xmlWriter->writeElementIf($style->isItalic(), 'w:i');
-        $xmlWriter->writeElementIf($style->isItalic(), 'w:iCs');
-
-        // Strikethrough, double strikethrough
-        $xmlWriter->writeElementIf($style->isStrikethrough(), 'w:strike');
-        $xmlWriter->writeElementIf($style->isDoubleStrikethrough(), 'w:dstrike');
-
-        // Small caps, all caps
-        $xmlWriter->writeElementIf($style->isSmallCaps(), 'w:smallCaps');
-        $xmlWriter->writeElementIf($style->isAllCaps(), 'w:caps');
-
-        // Underline
-        $underline = $style->getUnderline();
-        $xmlWriter->writeElementIf($underline != 'none', 'w:u', 'w:val', $underline);
-
         // Foreground-Color
         $fgColor = $style->getFgColor();
         $xmlWriter->writeElementIf(!is_null($fgColor), 'w:highlight', 'w:val', $fgColor);
 
-        // Superscript/subscript
-        $xmlWriter->writeElementIf($style->isSuperScript(), 'w:vertAlign', 'w:val', 'superscript');
-        $xmlWriter->writeElementIf($style->isSubScript(), 'w:vertAlign', 'w:val', 'subscript');
+        // Underline
+        $underline = $style->getUnderline();
+        $xmlWriter->writeElementIf($underline != 'none', 'w:u', 'w:val', $underline);
 
         // Background-Color
         $shading = $style->getShading();
@@ -120,6 +116,10 @@ class Font extends AbstractStyle
             $styleWriter = new Shading($xmlWriter, $shading);
             $styleWriter->write();
         }
+
+        // Superscript/subscript
+        $xmlWriter->writeElementIf($style->isSuperScript(), 'w:vertAlign', 'w:val', 'superscript');
+        $xmlWriter->writeElementIf($style->isSubScript(), 'w:vertAlign', 'w:val', 'subscript');
 
         $xmlWriter->endElement();
     }
