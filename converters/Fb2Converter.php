@@ -14,9 +14,13 @@ class Fb2Converter extends Converter
     {
         return ".fb2";
     }
+    private function escapexml($text)
+    {
+    	return htmlspecialchars($text, ENT_XML1, ini_get("default_charset"), false);
+    }
     protected function convertImpl($text)
     {
-        $descr['book_title'] = $this->nameru;
+        $descr['book_title'] = $this->escapexml($this->nameru);
         $descr['author'] = "";
         foreach ([$this->author, $this->illustrator] as $aut) {
             if ($aut) {
@@ -24,16 +28,16 @@ class Fb2Converter extends Converter
                     $a = explode(' ', trim($au));
                     $descr['author'] .= "<author>";
                     if (isset($a[1])) {
-                        $fn = '<first-name>' . array_shift($a) . '</first-name>';
-                        $ln = '<last-name>' . array_pop($a) . '</last-name>';
+                        $fn = '<first-name>' . $this->escapexml(array_shift($a)) . '</first-name>';
+                        $ln = '<last-name>' . $this->escapexml(array_pop($a)) . '</last-name>';
 
                         $descr['author'] .= $fn;
                         if ($a) {
-                            $descr['author'] .= '<middle-name>' . implode(' ', $a) . '</middle-name>';
+                            $descr['author'] .= '<middle-name>' . $this->escapexml(implode(' ', $a)) . '</middle-name>';
                         }
                         $descr['author'] .= $ln;
                     } else {
-                        $descr['author'] .= "<nickname>$a[0]</nickname>";
+                        $descr['author'] .= "<nickname>".$this->escapexml($a[0])."</nickname>";
                     }
                     $descr['author'] .= "</author>";
                 }
@@ -59,19 +63,19 @@ class Fb2Converter extends Converter
         $descr['translator'] = "";
         if ($this->translators) {
             foreach ($this->translators as $translator) {
-                $descr['translator'] .= "<translator><nickname>$translator</nickname></translator>";
+                $descr['translator'] .= "<translator><nickname>".$this->escapexml($translator)."</nickname></translator>";
             }
         }
         if ($this->seriestitle) {
         	$this->seriesnum = floor($this->seriesnum);
-            $descr['sequence'] = "<sequence name=\"{$this->seriestitle}\"" . ($this->seriesnum ? " number=\"{$this->seriesnum}\"" : '') . " />";
+            $descr['sequence'] = "<sequence name=\"".$this->escapexml($this->seriestitle)."\"" . ($this->seriesnum ? " number=\"{$this->seriesnum}\"" : '') . " />";
         }
         $descr['date2'] = '<date value=' . date('"Y-m-d">j F Y, H:i', $this->touched) . '</date>';
         $descr['id'] = 'RuRa_' . str_replace('/', '_', $this->nameurl);
         $descr['src_url'] = 'https://ruranobe.ru/r/' . $this->nameurl;
         $descr['isbn'] = "";
         if ($this->isbn) {
-            $descr['isbn'] = "<publish-info><isbn>{$this->isbn}</isbn></publish-info>";
+            $descr['isbn'] = "<publish-info><isbn>".$this->escapexml($this->isbn)."</isbn></publish-info>";
         }
         if ($this->command == 'RuRa-team') {
             $credit = "<section>
