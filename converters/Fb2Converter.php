@@ -156,8 +156,9 @@ class Fb2Converter extends Converter
                 },
                 $text
             );
-            $firstImage = strpos($text,'<image');
-            if($firstImage !== false && $firstImage < strpos($text,'<h'))
+            $firstImage = strpos($text,'<image');            
+            $firstHeading = strpos($text,'<h');
+            if($firstImage !== false && ($firstImage < $firstHeading || $firstHeading === false))
 				$text = "<h2>§¯§Ñ§é§Ñ§Ý§î§ß§í§Ö §Ú§Ý§Ý§ð§ã§ä§â§Ñ§è§Ú§Ú</h2>" . $text;
         }
         $j         = 1;
@@ -275,6 +276,9 @@ class Fb2Converter extends Converter
 
 		// no empty-with-title sections allowed. add emptyline
 		$text=preg_replace('@</title>\s*</section>@',"</title>\n<empty-line/>\n</section>",$text);
+
+		// no empty-with-only-image sections allowed. add emptyline
+		$text=preg_replace('@(<section>\s*<title>.*?</title>\s*<image .*?/>)\s*</section>@',"\\1\n<empty-line/>\n</section>",$text);
 
 		// add empty lines
 		$text = preg_replace('@</p>\s*<subtitle>@', "</p>\n<empty-line/>\n<subtitle>", $text);
