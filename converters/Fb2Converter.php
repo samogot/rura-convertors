@@ -185,7 +185,7 @@ class Fb2Converter extends Converter
 				$image = $this->images[$imageid];
                 $fileContents = file_get_contents($image['thumbnail']);
                 if ($fileContents) {
-					$binary .= '<binary id="img_' . $imageid . '" content-type="' . $image['mime_type'] . '">' . "\n" . base64_encode(
+					$binary .= '<binary id="img_' . $imageid . '" content-type="image/jpeg">' . "\n" . base64_encode(
                             $fileContents
                         ) . "\n</binary>";
                 }
