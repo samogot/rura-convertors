@@ -101,7 +101,7 @@ class EpubConverter extends Converter
 						  <p><b>410012692832515</b></p>
                           <p>PayPal:</p>
                           <p><b>paypal@ruranobe.ru</b></p>
-						  <p>А так же счет для перевода с кредитных карт:</p>
+						  <p>А также счет для перевода с кредитных карт:</p>
 						  <p><b>4890 4941 5384 9302</b></p>
 						  <p>Версия от ' . date('d.m.Y', $this->touched) . '</p>
 						  <p></p>
@@ -140,7 +140,7 @@ class EpubConverter extends Converter
             for ($i = 1; $i < count($this->covers); ++$i) {
                 $image    = $this->images[$this->covers[$i]];
                 $images[] = $this->covers[$i];
-                $title    = str_replace(' ', '_', $image['title']);
+                $title    = str_replace(' ', '_', $image['title']) . ($image['mime_type']=='image/png' ? '.jpg' : '');
                 $text     = "<img src=\"images/{$title}\" alt=\"{$title}\"/>" . $text;
             }
             $text       = preg_replace_callback(
@@ -148,7 +148,7 @@ class EpubConverter extends Converter
                 function ($match) use (&$images) {
                     $image     = $this->images[$match[2]];
                     $images[]  = $match[2];
-                    $title    = str_replace(' ', '_', $image['title']);
+                    $title    = str_replace(' ', '_', $image['title']) . ($image['mime_type']=='image/png' ? '.jpg' : '');
                     return "<img src=\"images/{$title}\" alt=\"{$title}\"/>";
                 },
                 $text
@@ -301,10 +301,10 @@ class EpubConverter extends Converter
             if ($this->height > 0) {
                 $i = $i + 1;
                 $epub->addFile(
-                    "images/" . str_replace(' ', '_', $image['title']),
+                    "images/" . str_replace(' ', '_', $image['title']) . ($image['mime_type']=='image/png' ? '.jpg' : ''),
                     "image-$i",
                     file_get_contents($image['thumbnail']),
-                    $image['mime_type']
+                    'image/jpeg'//$image['mime_type']
                 );
             }
         }
