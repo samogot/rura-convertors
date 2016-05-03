@@ -63,6 +63,7 @@ class Fb2Converter extends Converter
             }
         }
         if ($this->seriestitle) {
+        	$this->seriesnum = floor($this->seriesnum);
             $descr['sequence'] = "<sequence name=\"{$this->seriestitle}\"" . ($this->seriesnum ? " number=\"{$this->seriesnum}\"" : '') . " />";
         }
         $descr['date2'] = '<date value=' . date('"Y-m-d">j F Y, H:i', $this->touched) . '</date>';
