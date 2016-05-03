@@ -74,65 +74,65 @@ class Fb2Converter extends Converter
         }
         if ($this->command == 'RuRa-team') {
             $credit = "<section>
-					<title><p>Реквизиты переводчиков</p></title>
-					<p>Над переводом работала команда <strong>RuRa-team</strong></p>\n";
+					<title><p>���֧ܧӧڧ٧ڧ�� ��֧�֧ӧ�է�ڧܧ��</p></title>
+					<p>���ѧ� ��֧�֧ӧ�է�� ��ѧҧ��ѧݧ� �ܧ�ާѧߧէ� <strong>RuRa-team</strong></p>\n";
             foreach ($this->workers as $activity => $workers) {
                 $credit .= '<p>' . $activity . ': <strong>' . implode('</strong>, <strong>', $workers) . "</strong></p>\n";
             }
-            $credit .= '<p>Самый свежий перевод всегда можно найти на сайте нашего проекта:</p>
+            $credit .= '<p>���ѧާ��� ��ӧ֧اڧ� ��֧�֧ӧ�� �ӧ�֧ԧէ� �ާ�اߧ� �ߧѧۧ�� �ߧ� ��ѧۧ�� �ߧѧ�֧ԧ� ����֧ܧ��:</p>
 					<p><a l:href="http://ruranobe.ru">http://ruranobe.ru</a></p>
-					<p>Чтобы оставаться в курсе всех новостей, вступайте в нашу группу в Контакте:</p>
+					<p>�����ҧ� ����ѧӧѧ���� �� �ܧ���� �ӧ�֧� �ߧ�ӧ���֧�, �ӧ����ѧۧ�� �� �ߧѧ�� �ԧ����� �� ����ߧ�ѧܧ��:</p>
 					<p><a l:href="http://vk.com/ru.ranobe">http://vk.com/ru.ranobe</a></p>
 					<empty-line/>
-					<p>Для желающих отблагодарить переводчика материально имеются webmoney-кошельки команды:</p>
+					<p>���ݧ� �ا֧ݧѧ��ڧ� ���ҧݧѧԧ�էѧ�ڧ�� ��֧�֧ӧ�է�ڧܧ� �ާѧ�֧�ڧѧݧ�ߧ� �ڧާ֧���� webmoney-�ܧ��֧ݧ�ܧ� �ܧ�ާѧߧէ�:</p>
 					<p><strong>R125820793397</strong></p>
 					<p><strong>U911921912420</strong></p>
 					<p><strong>Z608138208963</strong></p>
-					<p>QIWI-кошелек:</p>
+					<p>QIWI-�ܧ��֧ݧ֧�:</p>
 					<p><strong>+79116857099</strong></p>
-					<p>Яндекс-деньги:</p>
+					<p>���ߧէ֧ܧ�-�է֧ߧ�ԧ�:</p>
 					<p><strong>410012692832515</strong></p>
                     <p>PayPal:</p>
                     <p><strong>paypal@ruranobe.ru</strong></p>
-					<p>А так же счет для перевода с кредитных карт:</p>
+					<p>�� ��ѧ� �ا� ���֧� �էݧ� ��֧�֧ӧ�է� �� �ܧ�֧էڧ�ߧ��� �ܧѧ��:</p>
 					<p><strong>4890 4941 5384 9302</strong></p>
 					<empty-line/>
-					<p>Версия от ' . date('d.m.Y', $this->touched) . '</p>
+					<p>���֧��ڧ� ��� ' . date('d.m.Y', $this->touched) . '</p>
 					<empty-line/>
 					<empty-line/>
 					<empty-line/>
-					<p><strong>Любое распространение перевода за пределами нашего сайта запрещено. Если вы скачали файл на другом сайте - вы поддержали воров</strong></p>
+					<p><strong>����ҧ�� ��ѧ�������ѧߧ֧ߧڧ� ��֧�֧ӧ�է� �٧� ���֧է֧ݧѧާ� �ߧѧ�֧ԧ� ��ѧۧ�� �٧ѧ��֧�֧ߧ�. ����ݧ� �ӧ� ��ܧѧ�ѧݧ� ��ѧۧ� �ߧ� �է��ԧ�� ��ѧۧ�� - �ӧ� ���էէ֧�اѧݧ� �ӧ����</strong></p>
 					<empty-line/>
 					<empty-line/>
 					<empty-line/>
 					</section>';
         } elseif (strpos($this->command, 'RuRa-team') !== false) {
             $credit = "<section>
-					<title><p>Реквизиты переводчиков</p></title>
-					<p>Над релизом работали {$this->command}</p>\n";
+					<title><p>���֧ܧӧڧ٧ڧ�� ��֧�֧ӧ�է�ڧܧ��</p></title>
+					<p>���ѧ� ��֧ݧڧ٧�� ��ѧҧ��ѧݧ� {$this->command}</p>\n";
             foreach ($this->workers as $activity => $workers) {
                 $credit .= '<p>' . $activity . ': <strong>' . implode('</strong>, <strong>', $workers) . "</strong></p>\n";
             }
-            $credit .= '<p>Самый свежий перевод всегда можно найти на сайте нашего проекта:</p>
+            $credit .= '<p>���ѧާ��� ��ӧ֧اڧ� ��֧�֧ӧ�� �ӧ�֧ԧէ� �ާ�اߧ� �ߧѧۧ�� �ߧ� ��ѧۧ�� �ߧѧ�֧ԧ� ����֧ܧ��:</p>
 					<p><a l:href="http://ruranobe.ru">http://ruranobe.ru</a></p>
-					<p>Чтобы оставаться в курсе всех новостей, вступайте в нашу группу в Контакте:</p>
+					<p>�����ҧ� ����ѧӧѧ���� �� �ܧ���� �ӧ�֧� �ߧ�ӧ���֧�, �ӧ����ѧۧ�� �� �ߧѧ�� �ԧ����� �� ����ߧ�ѧܧ��:</p>
 					<p><a l:href="http://vk.com/ru.ranobe">http://vk.com/ru.ranobe</a></p>
 					<empty-line/>
-					<p>Версия от ' . date('d.m.Y', $this->touched) . '</p>
+					<p>���֧��ڧ� ��� ' . date('d.m.Y', $this->touched) . '</p>
 					<empty-line/>
-					<p><strong>Любое коммерческое использование данного текста или его фрагментов запрещено</strong></p>
+					<p><strong>����ҧ�� �ܧ�ާާ֧��֧�ܧ�� �ڧ���ݧ�٧�ӧѧߧڧ� �էѧߧߧ�ԧ� ��֧ܧ��� �ڧݧ� �֧ԧ� ���ѧԧާ֧ߧ��� �٧ѧ��֧�֧ߧ�</strong></p>
 					</section>';
         } else {
-            $credit = "<section>\n<title><p>Реквизиты переводчиков</p></title>\n";
+            $credit = "<section>\n<title><p>���֧ܧӧڧ٧ڧ�� ��֧�֧ӧ�է�ڧܧ��</p></title>\n";
             if ($this->command) {
-                $credit .= "<p>Перевод команды {$this->command}</p>\n";
+                $credit .= "<p>���֧�֧ӧ�� �ܧ�ާѧߧէ� {$this->command}</p>\n";
             }
             foreach ($this->workers as $activity => $workers) {
                 $credit .= '<p>' . $activity . ': <strong>' . implode('</strong>, <strong>', $workers) . "</strong></p>\n";
             }
-            $credit .= '<p>Версия от ' . date('d.m.Y', $this->touched) . '</p>
+            $credit .= '<p>���֧��ڧ� ��� ' . date('d.m.Y', $this->touched) . '</p>
 					<empty-line/>
-					<p><strong>Любое коммерческое использование данного текста или его фрагментов запрещено</strong></p>
+					<p><strong>����ҧ�� �ܧ�ާާ֧��֧�ܧ�� �ڧ���ݧ�٧�ӧѧߧڧ� �էѧߧߧ�ԧ� ��֧ܧ��� �ڧݧ� �֧ԧ� ���ѧԧާ֧ߧ��� �٧ѧ��֧�֧ߧ�</strong></p>
 					</section>';
         }
         if ($this->height == 0) {
@@ -157,7 +157,7 @@ class Fb2Converter extends Converter
             );
             $firstImage = strpos($text,'<image');
             if($firstImage !== false && $firstImage < strpos($text,'<h'))
-				$text = "<h2>Начальные иллюстрации</h2>" . $text;
+				$text = "<h2>���ѧ�ѧݧ�ߧ��� �ڧݧݧ����ѧ�ڧ�</h2>" . $text;
         }
         $j         = 1;
         $notes     = '';
@@ -166,7 +166,7 @@ class Fb2Converter extends Converter
         for ($i = 0; $i < sizeof($footnotes); $i++) {
             if (is_numeric($footnotes[$i])) {
                 if ($isnotes == false) {
-                    $notes .= "<body name=\"notes\">\n\t<title><p>Примечания</p></title>\n";
+                    $notes .= "<body name=\"notes\">\n\t<title><p>����ڧާ֧�ѧߧڧ�</p></title>\n";
                 }
                 $isnotes = true;
                 $notes .= "\t<section id=\"cite_note-$footnotes[$i]\">\n\t\t<title><p>$j</p></title>\n\t\t<p>" . $footnotes[$i + 1] . "</p>\n\t</section>\n";
@@ -180,7 +180,7 @@ class Fb2Converter extends Converter
         $binary = "";
 		
         if ($images) {
-            foreach ($images as $imageid) {
+            foreach (array_unique($images) as $imageid) {
 				$image = $this->images[$imageid];
                 $fileContents = file_get_contents($image['thumbnail']);
                 if ($fileContents) {
@@ -336,7 +336,7 @@ class Fb2Converter extends Converter
         // $err=ob_get_clean();
         // error_reporting( $old );
         // if(!$valid){
-        // $message = "Возникла ошибка при конвертации $descr[src_url] в формат fb2 с размером изображений $this->height\nПодробности:\n\n$err\n";
+        // $message = "����٧ߧڧܧݧ� ���ڧҧܧ� ���� �ܧ�ߧӧ֧��ѧ�ڧ� $descr[src_url] �� ����ާѧ� fb2 �� ��ѧ٧ާ֧��� �ڧ٧�ҧ�ѧا֧ߧڧ� $this->height\n����է��ҧߧ����:\n\n$err\n";
         // $message = wordwrap($message, 70);
         // mail('convert_fb2@ruranobe.ru', "Fb2 Validation Error: $descr[src_url]", $message);
         // }
