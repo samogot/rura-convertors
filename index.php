@@ -115,9 +115,9 @@ $app->get(
         $teams       = array_keys($teams);
         $translators = array_keys($translators);
         $texts = $db->select(
-            'texts',
+            'chapters',
             [
-                '[>]chapters' => 'text_id',
+                '[>]texts' => 'text_id',
                 '[>]volumes'  => 'volume_id',
             ],
             [
