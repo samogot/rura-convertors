@@ -24,11 +24,14 @@ class Fb2Converter extends Converter
                     $a = explode(' ', trim($au));
                     $descr['author'] .= "<author>";
                     if (isset($a[1])) {
-                        $descr['author'] .= '<first-name>' . array_shift($a) . '</first-name>';
-                        $descr['author'] .= '<last-name>' . array_pop($a) . '</last-name>';
+                        $fn = '<first-name>' . array_shift($a) . '</first-name>';
+                        $ln = '<last-name>' . array_pop($a) . '</last-name>';
+
+                        $descr['author'] .= $fn;
                         if ($a) {
                             $descr['author'] .= '<middle-name>' . implode(' ', $a) . '</middle-name>';
                         }
+                        $descr['author'] .= $ln;
                     } else {
                         $descr['author'] .= "<nickname>$a[0]</nickname>";
                     }
@@ -36,6 +39,7 @@ class Fb2Converter extends Converter
                 }
             }
         }
+        if(!$descr['author']) $descr['author'] = '<author><nickname></nickname></author>';
         $descr['annotation']='';
         if($this->annotation) {
 			$this->annotation = preg_replace('@\n@', '</p><p>', $this->annotation);
