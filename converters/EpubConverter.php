@@ -160,7 +160,7 @@ class EpubConverter extends Converter
             }
         }
 
-        $j         = 0;
+        $j         = 1;
         $notes     = "<h2>Примечания</h2>\n\t\n";
         $isnotes   = false;
         $footnotes = explode(',;,', $this->footnotes);
@@ -173,7 +173,7 @@ class EpubConverter extends Converter
                     '<a epub:type="noteref"  href="notes.xhtml#note' . $j . '" class="reference" id="ref' . $j . '">[' . $j . ']</a>',
                     $text
                 );
-                $notes .= "\t<div class=\"notes\"><aside epub:type=\"rearnote\" class=\"note\" id=\"note$j\">$j. " . $footnotes[$i + 1] . "</aside></div>\n";
+                $notes .= "\t<div class=\"notes\"><aside epub:type=\"rearnote\" class=\"note\" id=\"note$j\"><p>$j. " . $footnotes[$i + 1] . "</p></aside></div>\n";
                 $i++;
                 $j++;
             }
