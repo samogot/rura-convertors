@@ -300,6 +300,7 @@ class Fb2Converter extends Converter
 		// change href to l:href and delete unsupported a attributes
 		$text = preg_replace('@<a( type="note")?.*?(href="[^"]*").*?>@', "<a\\1 l:\\2>", $text);
 		$notes = preg_replace('@<a.*?(href="[^"]*").*?>@', "<a l:\\1>", $notes);
+		$descr['annotation'] = preg_replace('@<a\s+.*?(href="[^"]*").*?>@', "<a l:\\1>", $descr['annotation']);
 		
         $text = trim($text);
         $fb2 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
