@@ -144,8 +144,9 @@ class EpubConverter extends Converter
                 $text     = "<img src=\"images/{$title}\" alt=\"{$title}\"/>" . $text;
             }
             $text       = preg_replace_callback(
-                '@(<a[^>]*>)?<img[^>]*data-resource-id="(\d*)"[^>]*>(</a>)?@u',
+                '@(<a[^>]*>)?<img[^>]*data-resource-id="(-?\d*)"[^>]*>(</a>)?@u',
                 function ($match) use (&$images) {
+                    if($match[2] < 0) return '';
                     $image     = $this->images[$match[2]];
                     $images[]  = $match[2];
                     $title    = "img_{$match[2]}.jpg";
