@@ -128,6 +128,11 @@ abstract class Converter
             return $this->makeDownload($bin, $response);
         }
     }
+    
+    protected function escapexml($text)
+    {
+        return htmlspecialchars($text, ENT_XML1, ini_get("default_charset"), false);
+    }
 
     abstract protected function convertImpl($text);
 

@@ -14,10 +14,6 @@ class Fb2Converter extends Converter
     {
         return ".fb2";
     }
-    private function escapexml($text)
-    {
-    	return htmlspecialchars($text, ENT_XML1, ini_get("default_charset"), false);
-    }
     protected function convertImpl($text)
     {
         $descr['book_title'] = $this->escapexml($this->nameru);

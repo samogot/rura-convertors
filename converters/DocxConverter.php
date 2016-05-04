@@ -33,15 +33,7 @@ class DocxConverter extends Converter
                 foreach (explode(',', $aut) as $au) {
                     $a               = explode(' ', trim($au));
                     $descr['author'] = (isset($descr['author']) ? $descr['author'] : '') . "<h1>";
-                    if (!empty($a[1])) {
-                        $descr['author'] .= array_shift($a) . ' ';
-                        $descr['author'] .= array_pop($a);
-                        if ($a) {
-                            $descr['author'] .= ' ' . implode(' ', $a) . ' ';
-                        }
-                    } else {
-                        $descr['author'] .= $a[0];
-                    }
+                    $descr['author'] .= $this->escapexml(trim($au));
                     $descr['author'] .= "</h1>";
                 }
             }
@@ -76,12 +68,12 @@ class DocxConverter extends Converter
                 if (!array_key_exists('translator', $descr)) {
                     $descr['translator'] = '';
                 }
-                $descr['translator'] .= "<p name=\"translator\">$translator</p>";
+                $descr['translator'] .= "<p name=\"translator\">" . $this->escapexml($translator) . "</p>";
             }
         }
 
         if ($this->seriestitle) {
-            $descr['sequence'] = "<h1>{$this->seriestitle}" . ($this->seriesnum ? " {$this->seriesnum}" : '') . " </h1>";
+            $descr['sequence'] = "<h1>" . $this->escapexml($this->seriestitle) . ($this->seriesnum ? " {$this->seriesnum}" : '') . " </h1>";
         }
 
         $descr['date2'] = date('j F Y, H:i', $this->touched);

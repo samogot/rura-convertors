@@ -26,15 +26,7 @@ class EpubConverter extends Converter
             if ($aut) {
                 foreach (explode(',', $aut) as $au) {
                     $a = explode(' ', trim($au));
-                    if (!empty($a[1])) {
-                        $descr['author'] .= array_shift($a) . ' ';
-                        $descr['author'] .= array_pop($a);
-                        if ($a) {
-                            $descr['author'] .= ' ' . implode(' ', $a) . ' ';
-                        }
-                    } else {
-                        $descr['author'] .= $a[0];
-                    }
+                    $descr['author'] .= $this->escapexml(trim($au));
                     $descr['author'] .= "\n";
                 }
             }
@@ -64,12 +56,12 @@ class EpubConverter extends Converter
                 if (!array_key_exists('translator', $descr)) {
                     $descr['translator'] = '';
                 }
-                $descr['translator'] .= "<p class=\"translator\">$translator</p>";
+                $descr['translator'] .= "<p class=\"translator\">" . $this->escapexml($translator) . "</p>";
             }
         }
 
         if ($this->seriestitle) {
-            $descr['sequence'] = "{$this->seriestitle}" . ($this->seriesnum ? " {$this->seriesnum}" : '');
+            $descr['sequence'] = $this->escapexml($this->seriestitle) . ($this->seriesnum ? " {$this->seriesnum}" : '');
         }
 
         $descr['date2'] = date('j F Y, H:i', $this->touched);
