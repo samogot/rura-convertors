@@ -53,7 +53,7 @@ class EpubConverter extends Converter
         if ($this->covers) {
             $cover                = $this->covers[0];
             $image                = $this->images[$cover];
-            $title                = str_replace(' ', '_', $image['title']);
+            $title                = "img_{$cover}.jpg";
             $descr['coverpage']   = "<div class=\"center\"><img src=\"images/{$title}\" alt=\"{$title}\"/></div>";
             $images[]             = $cover;
             $descr['coverpage_n'] = $cover;
@@ -140,7 +140,7 @@ class EpubConverter extends Converter
             for ($i = 1; $i < count($this->covers); ++$i) {
                 $image    = $this->images[$this->covers[$i]];
                 $images[] = $this->covers[$i];
-                $title    = str_replace(' ', '_', $image['title']) . ($image['mime_type']=='image/png' ? '.jpg' : '');
+                $title    = "img_{$this->covers[$i]}.jpg";
                 $text     = "<img src=\"images/{$title}\" alt=\"{$title}\"/>" . $text;
             }
             $text       = preg_replace_callback(
@@ -148,13 +148,14 @@ class EpubConverter extends Converter
                 function ($match) use (&$images) {
                     $image     = $this->images[$match[2]];
                     $images[]  = $match[2];
-                    $title    = str_replace(' ', '_', $image['title']) . ($image['mime_type']=='image/png' ? '.jpg' : '');
+                    $title    = "img_{$match[2]}.jpg";
                     return "<img src=\"images/{$title}\" alt=\"{$title}\"/>";
                 },
                 $text
             );
-            $firstImage = strpos($text, '<img');
-            if ($firstImage !== false && $firstImage < strpos($text, '<h')) {
+            $firstImage = strpos($text, '<img');   
+            $firstHeading = strpos($text,'<h');
+            if($firstImage !== false && ($firstImage < $firstHeading || $firstHeading === false)) {
                 $text = "<h2>Начальные иллюстрации</h2>" . $text;
             }
         }
@@ -301,7 +302,7 @@ class EpubConverter extends Converter
             if ($this->height > 0) {
                 $i = $i + 1;
                 $epub->addFile(
-                    "images/" . str_replace(' ', '_', $image['title']) . ($image['mime_type']=='image/png' ? '.jpg' : ''),
+                    "images/img_{$imageid}.jpg",
                     "image-$i",
                     file_get_contents($image['thumbnail']),
                     'image/jpeg'//$image['mime_type']
