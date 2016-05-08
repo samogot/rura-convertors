@@ -48,6 +48,7 @@ class Fb2Converter extends Converter
 			$this->annotation = preg_replace('@<p></p>@', '<empty-line/>', $this->annotation);		
         	$descr['annotation'] = '<annotation><p>' . $this->annotation . '</p></annotation>';
         }
+        $descr['coverpage']='';
         $images = [];
         if ($this->covers) {
             $cover                = $this->covers[0];

@@ -48,6 +48,7 @@ class DocxConverter extends Converter
             $descr['annotation'] = "<h2>Аннотация</h2><p>$this->annotation</p>";
         }
 
+        $descr['coverpage']='';
         $images = [];
         if ($this->covers) {
             $innerHeight = $this->height;

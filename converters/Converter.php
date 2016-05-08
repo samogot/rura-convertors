@@ -112,7 +112,7 @@ abstract class Converter
                 fclose($fp);
                 unlink($tmpfile);
             } else {
-                trigger_error("Cannot upload convertor cache - no upload link", E_USER_WARNING);
+                trigger_error("Cannot upload convertor cache of file '$part_filename' - no upload link", E_USER_WARNING);
             }
         }
         $json = $this->apiCall(
