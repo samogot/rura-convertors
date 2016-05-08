@@ -81,7 +81,7 @@ abstract class Converter
             default:
                 $h = '_' . $this->height;
         }
-        $part_filename  = '/' . $this->nameurl . '/' . str_replace(' ', '_', $this->namemain) . $h . $this->getExt();
+        $part_filename  = '/' . $this->nameurl . '/' . $this->escapedFileName() . $h . $this->getExt();
         $cache_filename = $this->config['folder'] . $part_filename;
         $ftp_filename = '/srv/ftp/ruranobe.ru/d' . $part_filename;
         $json = $this->apiCall('disk/resources', ['fields' => 'modified', 'path' => $cache_filename]);
@@ -147,7 +147,7 @@ abstract class Converter
      */
     protected function makeDownload($bin, $response)
     {
-        $filename = str_replace(' ', '_', $this->namemain) . ($this->height == 0 ? '_nopic' : '') . $this->getExt();
+        $filename = $this->escapedFileName() . ($this->height == 0 ? '_nopic' : '') . $this->getExt();
         $lastmod  = date(DATE_RFC2822, $this->touched);
         header('Pragma: public');
         header("Last-modified: $lastmod");
@@ -171,6 +171,14 @@ abstract class Converter
 //            ->withHeader("Content-Length", strlen($bin))
 //            ->write($bin);
     }
+
+    private function escapedFileName()
+    {
+        $string = str_replace(' ', '_', $this->namemain);
+        $string = preg_replace('/[#<\$\+%>!`&\*\'\|\{?"=\}\/:\\@]/', '', $string);
+        return $string;
+    }
+
 
     private function parseMainReleasesRow($pdb)
     {
