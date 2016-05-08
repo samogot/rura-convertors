@@ -28,6 +28,7 @@ class DocxConverter extends Converter
     protected function convertImpl($text)
     {
         $descr['book_title'] = $this->nameru;
+        $descr['author'] = "";
         foreach ([$this->author, $this->illustrator] as $aut) {
             if ($aut) {
                 foreach (explode(',', $aut) as $au) {
