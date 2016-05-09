@@ -29,6 +29,7 @@ abstract class Converter
     protected $height;
     protected $footnotes;
     protected $images;
+    protected $nocache;
 
     public function __construct($height, $pdb, $text, $config)
     {
@@ -55,11 +56,15 @@ abstract class Converter
         curl_close($curl);
         $json = json_decode($json_text);
         if (isset($_GET['debug']) && (!is_object($json) || isset($json->error))) {
-            var_dump(array('function'=>$function, 
-                'params'=>$params, 
-                'curl_opts'=>$opts, 
-                'curl_error'=>curl_error($curl), 
-                'result'=>($json?:$json_text)));
+            var_dump(
+                array(
+                    'function'   => $function,
+                    'params'     => $params,
+                    'curl_opts'  => $opts,
+                    'curl_error' => curl_error($curl),
+                    'result'     => ($json ?: $json_text)
+                )
+            );
             echo "\n\n";
         }
         return $json;
@@ -81,58 +86,67 @@ abstract class Converter
             default:
                 $h = '_' . $this->height;
         }
-        $part_filename  = '/' . $this->nameurl . '/' . $this->escapedFileName() . $h . $this->getExt();
-        $cache_filename = $this->config['folder'] . $part_filename;
-        $ftp_filename = '/srv/ftp/ruranobe.ru/d' . $part_filename;
-        $ftp_dirname = dirname($ftp_filename);
-        $json = $this->apiCall('disk/resources', ['fields' => 'modified', 'path' => $cache_filename]);
-        $bin = false;
-        if (!isset($json->modified) || $this->touched > strtotime($json->modified)) {
-            $bin  = $this->convertImpl($this->text_to_convert);
-            if (!is_dir($ftp_dirname)) {
-                mkdir($ftp_dirname, 0755, true);
-            }
-            file_put_contents($ftp_filename, $bin);
-            $json = $this->apiCall('disk/resources', ['path' => dirname($cache_filename)], [CURLOPT_PUT => true]);
-            if (isset($json->error) && $json->error == 'DiskPathDoesntExistsError') {
-                $this->apiCall('disk/resources', ['path' => dirname(dirname($cache_filename))], [CURLOPT_PUT => true]);
-                $this->apiCall('disk/resources', ['path' => dirname($cache_filename)], [CURLOPT_PUT => true]);
-            }
-            $json = $this->apiCall('disk/resources/upload', ['overwrite' => 'true', 'path' => $cache_filename]);
-            if (!empty($json->href)) {
-                $tmpfile = tempnam(sys_get_temp_dir(), 'cvcache');
-                file_put_contents($tmpfile, $bin);
-                $fp       = fopen($tmpfile, 'r');
-                $curl_upl = curl_init();
-                curl_setopt($curl_upl, CURLOPT_HTTPHEADER, ['Authorization: OAuth '. $this->config['key']]);
-                curl_setopt($curl_upl, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($curl_upl, CURLOPT_URL, $json->href);
-                curl_setopt($curl_upl, CURLOPT_INFILE, $fp);
-                curl_setopt($curl_upl, CURLOPT_INFILESIZE, filesize($tmpfile));
-                curl_setopt($curl_upl, CURLOPT_PUT, true);
-                curl_setopt($curl_upl, CURLOPT_UPLOAD, true);
-                curl_exec($curl_upl);
-                curl_close($curl_upl);
-                fclose($fp);
-                unlink($tmpfile);
-            } else {
-                trigger_error("Cannot upload convertor cache of file '$part_filename' - no upload link", E_USER_WARNING);
-            }
-        }
-        $json = $this->apiCall(
-            'disk/public/resources/download',
-            ['path' => $part_filename, 'public_key' => $this->config['public_key']]
-        );
-        if (isset($json->href)) {
-            return $response->withRedirect($json->href);
-        } else {
-            if (!$bin) {
+        $part_filename = '/' . $this->nameurl . '/' . $this->escapedFileName() . $h . $this->getExt();
+        $bin           = false;
+        if (!$this->nocache) {
+            $cache_filename = $this->config['folder'] . $part_filename;
+            $ftp_filename   = '/srv/ftp/ruranobe.ru/d' . $part_filename;
+            $ftp_dirname    = dirname($ftp_filename);
+            $json           = $this->apiCall('disk/resources', ['fields' => 'modified', 'path' => $cache_filename]);
+            if (!isset($json->modified) || $this->touched > strtotime($json->modified)) {
                 $bin = $this->convertImpl($this->text_to_convert);
+                if (!is_dir($ftp_dirname)) {
+                    mkdir($ftp_dirname, 0755, true);
+                }
+                file_put_contents($ftp_filename, $bin);
+                $json = $this->apiCall('disk/resources', ['path' => dirname($cache_filename)], [CURLOPT_PUT => true]);
+                if (isset($json->error) && $json->error == 'DiskPathDoesntExistsError') {
+                    $this->apiCall(
+                        'disk/resources',
+                        ['path' => dirname(dirname($cache_filename))],
+                        [CURLOPT_PUT => true]
+                    );
+                    $this->apiCall('disk/resources', ['path' => dirname($cache_filename)], [CURLOPT_PUT => true]);
+                }
+                $json = $this->apiCall('disk/resources/upload', ['overwrite' => 'true', 'path' => $cache_filename]);
+                if (!empty($json->href)) {
+                    $tmpfile = tempnam(sys_get_temp_dir(), 'cvcache');
+                    file_put_contents($tmpfile, $bin);
+                    $fp       = fopen($tmpfile, 'r');
+                    $curl_upl = curl_init();
+                    curl_setopt($curl_upl, CURLOPT_HTTPHEADER, ['Authorization: OAuth ' . $this->config['key']]);
+                    curl_setopt($curl_upl, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($curl_upl, CURLOPT_URL, $json->href);
+                    curl_setopt($curl_upl, CURLOPT_INFILE, $fp);
+                    curl_setopt($curl_upl, CURLOPT_INFILESIZE, filesize($tmpfile));
+                    curl_setopt($curl_upl, CURLOPT_PUT, true);
+                    curl_setopt($curl_upl, CURLOPT_UPLOAD, true);
+                    curl_exec($curl_upl);
+                    curl_close($curl_upl);
+                    fclose($fp);
+                    unlink($tmpfile);
+                } else {
+                    trigger_error(
+                        "Cannot upload convertor cache of file '$part_filename' - no upload link",
+                        E_USER_WARNING
+                    );
+                }
             }
-            return $this->makeDownload($bin, $response);
+            $json = $this->apiCall(
+                'disk/public/resources/download',
+                ['path' => $part_filename, 'public_key' => $this->config['public_key']]
+            );
+            if (isset($json->href)) {
+                return $response->withRedirect($json->href);
+            }
         }
+        if (!$bin) {
+            $bin = $this->convertImpl($this->text_to_convert);
+            error_log('converted ' . $part_filename . '. peak memory usage: ' . memory_get_peak_usage());
+        }
+        return $this->makeDownload($bin, $response);
     }
-    
+
     protected function escapexml($text)
     {
         return htmlspecialchars($text, ENT_XML1, ini_get("default_charset"), false);
@@ -202,6 +216,6 @@ abstract class Converter
         $this->workers     = $pdb['workers'];
         $this->footnotes   = $pdb['footnotes'];
         $this->images      = $pdb['images'];
-
+        $this->nocache     = $pdb['nocache'];
     }
 }

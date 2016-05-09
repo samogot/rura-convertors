@@ -254,8 +254,7 @@ class AltDocxConverter extends Converter
         \PhpOffice\PhpWord\Settings::setCompatibility(false);
 
         $doc = new \DOMDocument();
-        libxml_use_internal_errors(true);
-        $doc->loadHTML('<?xml encoding="UTF-8">' . $epubText, LIBXML_NOWARNING);
+        @$doc->loadHTML('<?xml encoding="UTF-8">' . $epubText, LIBXML_NOWARNING);
 
         $paths = htmltodocx_paths();
 
@@ -296,6 +295,7 @@ class AltDocxConverter extends Converter
         ];
 
         htmltodocx_insert_html($phpword_object, $doc->getElementsByTagName('body')[0], $initial_state);
+        unset($doc);
 
         $h2d_file_uri = tempnam(sys_get_temp_dir(), 'htd');
         /*if ($h2d_file_uri === false) {

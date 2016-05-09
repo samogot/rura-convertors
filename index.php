@@ -235,7 +235,8 @@ $app->get(
             'name_main'    => $volume['name_file'],
             'workers'      => $workers,
             'footnotes'    => $footnotes,
-            'images'       => $images
+            'images'       => $images,
+            'nocache'      => intval($request->getParam('nocache', 0))
         ];
         $converter = null;
         switch ($format) {
