@@ -147,6 +147,7 @@ $app->get(
                 $footnotes .= ',;,';
             }
         }
+        unset($texts);
 
         preg_match_all('/data-resource-id="(\d+)"/', $text, $matches);
         unset($matches[0]);
@@ -187,6 +188,7 @@ $app->get(
         } else {
             $images_temp = [];
         }
+        unset($matches);
 
         $images = array();
         for ($i = 0; $i < sizeof($images_temp); $i++) {
@@ -214,6 +216,7 @@ $app->get(
                 'title'          => $image['title']
             ];
         }
+        unset($images_temp);
 
         $pdb       = [
             'annotation'   => $volume['annotation'],
@@ -244,6 +247,9 @@ $app->get(
                 break;
             case 'docx':
                 $converter = new Ruranobe\Converters\DocxConverter($height, $pdb, $text, $this->config);
+                break;
+            case 'd0cx':
+                $converter = new Ruranobe\Converters\AltDocxConverter($height, $pdb, $text, $this->config);
                 break;
             default:
                 return $response->withStatus(404, 'Unknown format');
