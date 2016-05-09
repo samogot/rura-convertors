@@ -1165,10 +1165,10 @@ function htmltodocx_insert_html_recursive(&$phpword_object, $phpword_element, $h
 
                     case 'footnote':
 
-                        if ($element->nodeValue) {
+                        if ($element->getAttribute("text")) {
                             $state['textrun'] = $phpword_element->createTextRun();
                             $state['textrun']->addText(
-                                htmltodocx_clean_text($element->nodeValue),
+                                htmltodocx_clean_text($element->getAttribute("text")),
                                 $state['current_style']
                             );
                         }
