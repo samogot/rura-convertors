@@ -13,8 +13,8 @@ $config = [
     'public_key'  => '123',
     'ga_tid'      => '123',
     'folder'      => '123',
-    'repo'        => '/media/forum.ruranobe.ru/images/',
-    'repo_prefix' => '//ruranobe.ru/images/'
+    'repo'        => '123',
+    'repo_prefix' => '123'
 ];
 
 if (file_exists(__DIR__ . '/config.local.php')) {

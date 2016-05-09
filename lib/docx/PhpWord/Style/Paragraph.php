@@ -18,7 +18,7 @@
 namespace PhpOffice\PhpWord\Style;
 
 use PhpOffice\PhpWord\Exception\InvalidStyleException;
-use PhpOffice\PhpWord\Shared\String;
+use PhpOffice\PhpWord\Shared\StringElement;
 
 /**
  * Paragraph style

@@ -17,7 +17,7 @@
 
 namespace PhpOffice\PhpWord\Element;
 
-use PhpOffice\PhpWord\Shared\String;
+use PhpOffice\PhpWord\Shared\StringElement;
 use PhpOffice\PhpWord\Style\ListItem as ListItemStyle;
 
 /**

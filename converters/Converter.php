@@ -84,10 +84,14 @@ abstract class Converter
         $part_filename  = '/' . $this->nameurl . '/' . $this->escapedFileName() . $h . $this->getExt();
         $cache_filename = $this->config['folder'] . $part_filename;
         $ftp_filename = '/srv/ftp/ruranobe.ru/d' . $part_filename;
+        $ftp_dirname = dirname($ftp_filename);
         $json = $this->apiCall('disk/resources', ['fields' => 'modified', 'path' => $cache_filename]);
         $bin = false;
         if (!isset($json->modified) || $this->touched > strtotime($json->modified)) {
-            $bin  = $this->convertImpl($this->text_to_convert);mkdir(dirname($ftp_filename), 0755, true);
+            $bin  = $this->convertImpl($this->text_to_convert);
+            if (!is_dir($ftp_dirname)) {
+                mkdir($ftp_dirname, 0755, true);
+            }
             file_put_contents($ftp_filename, $bin);
             $json = $this->apiCall('disk/resources', ['path' => dirname($cache_filename)], [CURLOPT_PUT => true]);
             if (isset($json->error) && $json->error == 'DiskPathDoesntExistsError') {
@@ -178,7 +182,6 @@ abstract class Converter
         $string = preg_replace('/[#<\$\+%>!`&\*\'\|\{?"=\}\/:\\@]/', '', $string);
         return $string;
     }
-
 
     private function parseMainReleasesRow($pdb)
     {

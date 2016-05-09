@@ -149,7 +149,7 @@ class DocxConverter extends Converter
                     "\" height=\"" . $image['convert_height'] . "\" />" . $text;
             }
             $text = preg_replace_callback(
-                '/(<a[^>]*>)?<img[^>]*data-resource-id="(-\d*)"[^>]*>(<\/a>)?/u',
+                '/(<a[^>]*>)?<img[^>]*data-resource-id="(-?\d*)"[^>]*>(<\/a>)?/u',
                 function ($match) use (&$images) {
                     if($match[2] < 0) return '';
                     $image = $this->images[$match[2]];

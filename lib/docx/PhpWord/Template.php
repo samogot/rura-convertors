@@ -18,7 +18,7 @@
 namespace PhpOffice\PhpWord;
 
 use PhpOffice\PhpWord\Exception\Exception;
-use PhpOffice\PhpWord\Shared\String;
+use PhpOffice\PhpWord\Shared\StringElement;
 use PhpOffice\PhpWord\Shared\ZipArchive;
 
 /**

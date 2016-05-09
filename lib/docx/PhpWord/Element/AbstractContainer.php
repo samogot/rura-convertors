@@ -82,6 +82,7 @@ abstract class AbstractContainer extends AbstractElement
 
         // Run valid `add` command
         if (in_array($function, $functions)) {
+
             $element = str_replace('add', '', $function);
 
             // Special case for TextBreak
