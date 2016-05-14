@@ -90,7 +90,7 @@ abstract class Converter
         $bin           = false;
         if (!$this->nocache) {
             $cache_filename = $this->config['folder'] . $part_filename;
-            $ftp_filename   = '/srv/ftp/ruranobe.ru/d' . $part_filename;
+            $ftp_filename   = '/srv/ftp/ruranobe.ru/d/' . $this->getExt() . $part_filename;
             $ftp_dirname    = dirname($ftp_filename);
             $json           = $this->apiCall('disk/resources', ['fields' => 'modified', 'path' => $cache_filename]);
             if (!isset($json->modified) || $this->touched > strtotime($json->modified)) {
