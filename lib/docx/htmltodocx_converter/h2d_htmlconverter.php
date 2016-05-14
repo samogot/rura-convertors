@@ -95,6 +95,7 @@ function htmltodocx_clean_text($text) {
   
   // Convert entities:
   $text = html_entity_decode($text, ENT_COMPAT, 'UTF-8');
+  $text = htmlspecialchars($text, ENT_XML1, 'UTF-8');
   return $text;
 }
 

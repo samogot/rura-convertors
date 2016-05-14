@@ -188,21 +188,22 @@ function htmltodocx_html_allowed_children($tag = null)
  */
 function htmltodocx_clean_text($text)
 {
-
-    // Replace each &nbsp; with a single space:
-//  $text = str_replace('&nbsp;', ' ', $text);
-//  if (strpos($text, '<') !== FALSE) {
+  
+  // Replace each &nbsp; with a single space:
+  $text = str_replace('&nbsp;', ' ', $text);
+  if (strpos($text, '<') !== FALSE) {
     // We only run strip_tags if it looks like there might be some tags in the text
     // as strip_tags is expensive:
-//    $text = strip_tags($text);
-//  }
-
-    // Strip out extra spaces:
-//  $text = preg_replace('/\s+/u', ' ', $text);
-
-    // Convert entities:
-//  $text = html_entity_decode($text, ENT_COMPAT, 'UTF-8');
-    return htmlspecialchars($text, ENT_NOQUOTES | ENT_HTML5, false);
+    $text = strip_tags($text);
+  }
+    
+  // Strip out extra spaces:
+  $text = preg_replace('/\s+/u', ' ', $text);
+  
+  // Convert entities:
+  $text = html_entity_decode($text, ENT_COMPAT, 'UTF-8');
+  $text = htmlspecialchars($text, ENT_XML1, 'UTF-8');
+  return $text;
 }
 
 /**
