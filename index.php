@@ -79,15 +79,30 @@ $app->get(
         }
 
         $project     = $db->get('projects', ['title'], ['project_id' => $volume['project_id']]);
-        $touched     = $db->max(
+        $touched_h   = $db->max(
             'texts_history',
             [
                 '[>]chapters' => ['current_text_id' => 'text_id'],
             ],
             'insertion_time',
-            ['volume_id' => $volume['volume_id']]
+            [
+                "AND" => [
+                    'volume_id' => $volume['volume_id'],
+                    '#publish_date[<=]' => 'NOW()'
+                ]
+            ]
         );
-        $touched     = strtotime($touched) ?: time();
+        $touched_p   = $db->max(
+            'chapters',
+            'publish_date',
+            [
+                "AND" => [
+                    'volume_id' => $volume['volume_id'],
+                    '#publish_date[<=]' => 'NOW()'
+                ]
+            ]
+        );
+        $touched     = max(strtotime($touched_h), strtotime($touched_p)) ?: time();
         $activities  = $db->select(
             'volume_release_activities',
             [
@@ -129,7 +144,10 @@ $app->get(
                 'footnotes'
             ],
             [
-                'volume_id' => $volume['volume_id'],
+                "AND" => [
+                    'volume_id' => $volume['volume_id'],
+                    '#publish_date[<=]' => 'NOW()'
+                ]
             ]
         );
 
