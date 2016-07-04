@@ -48,6 +48,7 @@ $app->get(
         $project_alias = $args['title'];
         $volume_alias  = $args['volume'];
         $height        = intval($request->getParam('pic', 1080));
+        $colorImgs     = intval($request->getParam('color', 1));
 
         /** @var medoo $db */
         $db     = $this->db;
@@ -167,7 +168,7 @@ $app->get(
         }
         unset($texts);
 
-        preg_match_all('/data-resource-id="(\d+)"/', $text, $matches);
+        preg_match_all('/-resource-id="(\d+)"/', $text, $matches);
         unset($matches[0]);
         $covers = [];
         if ($volume['image_one']) {
@@ -235,6 +236,12 @@ $app->get(
             ];
         }
         unset($images_temp);
+        if (!$colorImgs) {
+	    preg_match_all('/data-resource-id="(\d+)" data-non-colored-resource-id="(\d+)"/', $text, $matches, PREG_SET_ORDER);
+    	    foreach ($matches as $match_item) {
+    		$images[$match_item[1]] = $images[$match_item[2]];
+	    }
+        }        
 
         $pdb       = [
             'annotation'   => $volume['annotation'],
@@ -259,16 +266,16 @@ $app->get(
         $converter = null;
         switch ($format) {
             case 'fb2':
-                $converter = new Ruranobe\Converters\Fb2Converter($height, $pdb, $text, $this->config);
+                $converter = new Ruranobe\Converters\Fb2Converter($height, $pdb, $text, $this->config, $colorImgs);
                 break;
             case 'epub':
-                $converter = new Ruranobe\Converters\EpubConverter($height, $pdb, $text, $this->config);
+                $converter = new Ruranobe\Converters\EpubConverter($height, $pdb, $text, $this->config, $colorImgs);
                 break;
             case 'docx':
-                $converter = new Ruranobe\Converters\DocxConverter($height, $pdb, $text, $this->config);
+                $converter = new Ruranobe\Converters\DocxConverter($height, $pdb, $text, $this->config, $colorImgs);
                 break;
             case 'd0cx':
-                $converter = new Ruranobe\Converters\AltDocxConverter($height, $pdb, $text, $this->config);
+                $converter = new Ruranobe\Converters\AltDocxConverter($height, $pdb, $text, $this->config, $colorImgs);
                 break;
             default:
                 return $response->withStatus(404, 'Unknown format');

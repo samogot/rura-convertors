@@ -30,10 +30,12 @@ abstract class Converter
     protected $footnotes;
     protected $images;
     protected $nocache;
+    protected $colorImgs;
 
-    public function __construct($height, $pdb, $text, $config)
+    public function __construct($height, $pdb, $text, $config, $colorImgs)
     {
         $this->height = $height;
+        $this->colorImgs = $colorImgs;
         $this->parseMainReleasesRow($pdb);
         $this->text_to_convert = $text;
         $this->config          = $config;
@@ -85,6 +87,9 @@ abstract class Converter
                 break;
             default:
                 $h = '_' . $this->height;
+        }
+        if (!$this->colorImgs) {
+    	    $h = '_nocolors'.$h;
         }
         $part_filename = '/' . $this->nameurl . '/' . $this->escapedFileName() . $h . $this->getExt();
         $bin           = false;
@@ -165,7 +170,7 @@ abstract class Converter
      */
     protected function makeDownload($bin, $response)
     {
-        $filename = $this->escapedFileName() . ($this->height == 0 ? '_nopic' : '') . $this->getExt();
+        $filename = $this->escapedFileName() . ($this->colorImgs == 0 ? '_nocolors' : '') . ($this->height == 0 ? '_nopic' : '') . $this->getExt();
         $lastmod  = date(DATE_RFC2822, $this->touched);
         header('Pragma: public');
         header("Last-modified: $lastmod");
