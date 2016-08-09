@@ -276,15 +276,13 @@ class EpubConverter extends Converter
         $i = 0;
         foreach ($images as $imageid) {
             $image = $this->images[$imageid];
-            if ($this->height > 0) {
-                $i = $i + 1;
-                $epub->addFile(
-                    "images/img_{$imageid}.jpg",
-                    "image-$i",
-                    file_get_contents($image['thumbnail']),
-                    'image/jpeg'//$image['mime_type']
-                );
-            }
+            $i = $i + 1;
+            $epub->addFile(
+                "images/img_{$imageid}.jpg",
+                "image-$i",
+                file_get_contents($image['thumbnail']),
+                'image/jpeg'//$image['mime_type']
+            );
         }
 
         if ($this->isbn) {
