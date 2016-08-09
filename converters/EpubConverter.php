@@ -242,6 +242,7 @@ class EpubConverter extends Converter
         $header                      = '';
         $tableOfContentsLinks        = [];
         $tableOfContentsChapterNames = [];
+        $tableOfContentsBodies       = [];
         foreach ($chapters as $chapterbody) {
             if (strpos($chapterbody, '<h1') === 0 || strpos($chapterbody, '<h2') === 0) {
                 $header = $chapterbody;
@@ -251,41 +252,23 @@ class EpubConverter extends Converter
             if (preg_match('@<h[1,2]>(.*?)</h[1,2]>@s', $header, $match)) {
                 $j           = $j + 1;
                 $chaptername = $match[1];
-                if ($chaptername === 'Примечания') // Primechania
-                {
-                    array_push($tableOfContentsLinks, "notes.xhtml");
-                    array_push($tableOfContentsChapterNames, $chaptername);
-                } else {
-                    array_push($tableOfContentsLinks, "part-$j.xhtml");
-                    array_push($tableOfContentsChapterNames, $chaptername);
-                }
+                array_push($tableOfContentsLinks, "part-$j.xhtml");
+                array_push($tableOfContentsChapterNames, $chaptername);
+                array_push($tableOfContentsBodies, $header . $chapterbody);
             }
         }
-        /* Doublirovanie koda. Should be rewritten somehow in future. */
+
+        $tocSize = count($tableOfContentsChapterNames);
+        if($tableOfContentsChapterNames[$tocSize - 1] === 'Примечания') {
+            $tableOfContentsLinks[$tocSize - 1] = "notes.xhtml";
+        }
 
         $tableOfContents = $this->createTableOfContentsText($tableOfContentsLinks, $tableOfContentsChapterNames);
         $epub->addChapter('Содержание', "toc.xhtml", $tableOfContents, false);
 
-        $j      = 0;
-        $header = '';
-        foreach ($chapters as $chapterbody) {
-            if (strpos($chapterbody, '<h1') === 0 || strpos($chapterbody, '<h2') === 0) {
-                $header = $chapterbody;
-                continue;
-            }
-
-            if (preg_match('@<h[1,2]>(.*?)</h[1,2]>@s', $header, $match)) {
-                $j           = $j + 1;
-                $chaptername = $match[1];
-                if ($chaptername === 'Примечания') // Primechania
-                {
-                    $chapter = $this->wrapHtmlInHtmlTags($header . $chapterbody, $chaptername);
-                    $epub->addChapter($chaptername, "notes.xhtml", $chapter, false);
-                } else {
-                    $chapter = $this->wrapHtmlInHtmlTags($header . $chapterbody, $chaptername);
-                    $epub->addChapter($chaptername, "part-$j.xhtml", $chapter, false);
-                }
-            }
+        for($i = 0; $i < $tocSize; ++$i) {
+            $chapter = $this->wrapHtmlInHtmlTags($tableOfContentsBodies[$i], $tableOfContentsChapterNames[$i]);
+            $epub->addChapter($tableOfContentsChapterNames[$i], $tableOfContentsLinks[$i], $chapter, false);
         }
 
         //
